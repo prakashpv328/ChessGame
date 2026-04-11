@@ -10,6 +10,29 @@
     <div class="app">
         <div id="board" class="board"></div>
 
+        <aside class="panel">
+            <h3 id="status">Chess Game</h3>
+
+            <div class="capture-box">
+                <div class="cap-title">Black captured</div>
+                <div id="capturedByWhite" class="captured-row"></div>
+            </div>
+
+            <div class="buttons">
+                <button id="undoBtn">Undo</button>
+                <button id="redobtn">Redo</button>
+                <button id="resetbtn">Reset</button>
+            </div>
+
+            <div id="moves" class="moves"></div>
+
+            <div class="capture-box">
+                <div class="cap-title">White captured</div>
+                <div id="capturedByBlack" class="captured-row"></div>
+            </div>
+
+        </aside>
+
     </div>
     <script src="script.js"></script>
 </body>

@@ -3,7 +3,7 @@
     --dark:#7ea35a;
     --frame:#0f1114;
     --bg:#1b1e22;
-    --sq:min(10vmin,80px);
+    --sq:min(12vmin,80px);
     --border:clamp(4px,1vmin,8px);
 }
 
@@ -12,24 +12,24 @@
 }
 
 body{
-    margin:0;
+    margin:25px 0 0 0;
     min-height:100vh;
     background:var(--bg);
     display:flex;
     justify-content:center;
-    align-items:center;
-    padding:8px;
+    align-items:flex-start;
+    padding:10px;
     font-family:Arial,Helvetica,sans-serif;
 }
 
 .app{
     display:flex;
+    flex-direction:row;
     gap:16px;
-    align-items:start;
+    align-items:flex-start;
     justify-content:center;
-    flex-wrap:wrap;
+    flex-wrap:nowrap;
 }
-
 .board{
     display:grid;
     grid-template-columns:repeat(8,var(--sq));
@@ -41,6 +41,7 @@ body{
 
     max-width:calc(8*var(--sq)+2*var(--border));
     max-height:calc(8*var(--sq)+2*var(--border));
+    flex:0 0 auto;
 }
 
 .square{
@@ -65,4 +66,75 @@ body{
     pointer-events:none;
     user-select:none;
     -webkit-user-drag:none;
+}
+
+.panel{
+    width:300px;
+    background:#242830;
+    border:1px solid #3a404a;
+    border-radius:10px;
+    padding:12px;
+    color:#fff;
+    flex:0 0 300px;
+}
+
+#status{
+    margin:0 0 10px;
+}
+
+.capture-box{
+    background:#14171c;
+    border:1px solid #2e3440;
+    border-radius:8px;
+    padding:8px;
+    margin-bottom:10px;
+}
+
+.cap-title{
+    font-size:12px;
+    color:#b9c0cc;
+    margin-bottom:6px;
+}
+
+.captured-row{
+    min-height:40px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:4px;
+    align-items:center;
+}
+
+.buttons{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-top:15px;
+    margin-bottom:10px;
+}
+
+button{
+    border:none;
+    padding:8px 10px;
+    border-radius:7px;
+    background:#4d6fd6;
+    color:#fff;
+    font-weight:600;
+    cursor:pointer;
+}
+
+.moves{
+    background:#14171c;
+    border:1px solid #2e3440;
+    border-radius:8px;
+    padding:8px;
+    min-height:360px;
+    margin-bottom: 10px;
+}
+
+@media(max-width:900px){
+    .app{
+        flex-direction:column;
+        flex-wrap:wrap;
+        align-items:center;
+    }
 }
