@@ -5,6 +5,10 @@ window.onload = function () {
     const capturedByWhiteEl=document.getElementById("capturedByWhite");
     const capturedByBlackEl=document.getElementById("capturedByBlack");
 
+    const undoBtn=document.getElementById("undoBtn");
+    const redoBtn=document.getElementById("redoBtn");
+    const resetBtn=document.getElementById("resetBtn");
+
     const IMG = {
         wK:"pieces/white/king.png",wQ:"pieces/white/queen.png",wR:"pieces/white/rook.png",wB:"pieces/white/bishop.png",wN:"pieces/white/knight.png",wP:"pieces/white/pawn.png",
         bK:"pieces/black/king.png",bQ:"pieces/black/queen.png",bR:"pieces/black/rook.png",bB:"pieces/black/bishop.png",bN:"pieces/black/knight.png",bP:"pieces/black/pawn.png"
@@ -18,6 +22,7 @@ window.onload = function () {
     const inBoard=(r,c)=>r>=0 && r<8 && c>=0 && c<8;
     const enemyOf=(color)=>color==="w"?"b":"w";
     const squareName=(r,c)=>files[c]+(8-r);
+    const clone=(obj)=>JSON.parse(JSON.stringify(obj));
 
     function createStartBoard(){
         const b = Array.from({length:8},()=>Array(8).fill(null));
@@ -31,15 +36,44 @@ window.onload = function () {
         return b;
     }
 
-    const game={
-        board:createStartBoard(),
-        turn:"w",
-        selected:null,
-        legalMoves:[],
-        capturedByWhite:[],
-        capturedByBlack:[],
-        moveList:[]
+    function createNewGame(){
+        return{
+            board:createStartBoard(),
+            turn:"w",
+            selected:null,
+            legalMoves:[],
+            capturedByWhite:[],
+            capturedByBlack:[],
+            moveList:[]
+        }
     };
+
+    let game=createNewGame();
+
+    let undoStack=[];
+    let redoStack=[];
+
+    function snapshot(){
+        return clone({
+            board:game.board,
+            turn:game.turn,
+            selected:null,
+            legalMoves:[],
+            capturedByWhite:game.capturedByWhite,
+            capturedByBlack:game.capturedByBlack,
+            moveList:game.moveList
+        });
+    }
+
+    function restore(state){
+        game.board=state.board;
+        game.turn=state.turn;
+        game.selected=null;
+        game.legalMoves=[];
+        game.capturedByWhite=state.capturedByWhite;
+        game.capturedByBlack=state.capturedByBlack;
+        game.moveList=state.moveList;
+    }
 
     function getPseudoMoves(r,c){
         const board=game.board;
@@ -56,21 +90,18 @@ window.onload = function () {
 
             const r1=r+dir;
             if(inBoard(r1,c) && !board[r1][c]){
-                moves.push({
-                    from:{r,c},
-                    to:{r:r1,c}
-                });
+                moves.push({from:{r,c},to:{r:r1,c}});
                 const r2=r+2*dir;
 
                 if(r===startRow && !board[r2][c]){
-                    moves.push({from:{r,c},to:{r:r2,c}})
+                    moves.push({from:{r,c},to:{r:r2,c}});
                 }
             }
 
             for(const dc of [-1,1]){
                 const rr=r+dir,cc=c+dc;
                 if(inBoard(rr,cc) && board[rr][cc] && board[rr][cc].color===enemy){
-                    moves.push({from:{r,c},to:{r:rr,c:cc},capture:true})
+                    moves.push({from:{r,c},to:{r:rr,c:cc},capture:true});
                 }
             }
         }
@@ -147,6 +178,10 @@ window.onload = function () {
     }
 
     function makeMove(move){
+
+        undoStack.push(snapshot());
+        redoStack=[];
+
         const b=game.board;
         const movingPiece=b[move.from.r][move.from.c];
         const targetPiece=b[move.to.r][move.to.c];
@@ -170,7 +205,7 @@ window.onload = function () {
     }
 
     function isSameMove(a,b){
-      return a.from.r===b.from.r && a.from.c===b.from.c && a.to.r===b.to.r && a.to.c===b.to.c;
+        return a.from.r===b.from.r && a.from.c===b.from.c && a.to.r===b.to.r && a.to.c===b.to.c;
     }
 
     function onSquareClick(e){
@@ -208,7 +243,7 @@ window.onload = function () {
             img.src=IMG[pc.color+pc.type];
             img.alt=pc.color+pc.type;
             capturedByWhiteEl.appendChild(img);
-        })
+        });
 
         game.capturedByBlack.forEach(pc=>{
             const img=document.createElement("img");
@@ -244,45 +279,72 @@ window.onload = function () {
         boardEl.innerHTML="";
 
         for(let r=0;r<8;r++){
-          for(let c=0;c<8;c++){
-            const sq = document.createElement("div");
-            sq.className = "square "+((r+c)%2===0?"light":"dark");
-            sq.dataset.r=r;
-            sq.dataset.c=c;
+            for(let c=0;c<8;c++){
+                const sq = document.createElement("div");
+                sq.className = "square "+((r+c)%2===0?"light":"dark");
+                sq.dataset.r=r;
+                sq.dataset.c=c;
             
-            if(game.selected && game.selected.r===r && game.selected.c===c){
-                sq.classList.add("selected");
-            }
-
-            const legal=game.legalMoves.find(m=>m.to.r===r && m.to.c===c);
-            if(legal){
-                if(game.board[r][c]){
-                    sq.classList.add("legal-capture");
+                if(game.selected && game.selected.r===r && game.selected.c===c){
+                    sq.classList.add("selected");
                 }
-                else{
-                    const dot=document.createElement("div");
-                    dot.className="legal-dot";
-                    sq.appendChild(dot);
+
+                const legal=game.legalMoves.find(m=>m.to.r===r && m.to.c===c);
+                if(legal){
+                    if(game.board[r][c]){
+                        sq.classList.add("legal-capture");
+                    }
+                    else{
+                        const dot=document.createElement("div");
+                        dot.className="legal-dot";
+                        sq.appendChild(dot);
+                    }
                 }
+
+
+                const piece=game.board[r][c];
+                if(piece){
+                    const img=document.createElement("img");
+                    img.className="piece";
+                    img.src=IMG[piece.color+piece.type];
+                    img.alt=piece.color+piece.type;
+                    sq.appendChild(img);
+                }
+
+                sq.addEventListener("click",onSquareClick);
+                boardEl.appendChild(sq);
             }
-
-
-            const piece=game.board[r][c];
-            if(piece){
-              const img=document.createElement("img");
-              img.className="piece";
-              img.src=IMG[piece.color+piece.type];
-              img.alt=piece.color+piece.type;
-              sq.appendChild(img);
-            }
-
-            sq.addEventListener("click",onSquareClick);
-            boardEl.appendChild(sq);
-          }
         }
         statusEl.textContent=`${game.turn === "w"?"White":"Black"} to move`;
         drawCapturedPieces();
         drawMoveList();
     }
-  drawBoard();
+
+    undoBtn.addEventListener("click",()=>{
+        if(undoStack.length===0) return;
+
+        redoStack.push(snapshot());
+
+        const prev=undoStack.pop();
+        restore(prev);
+        drawBoard();
+    });
+
+    redoBtn.addEventListener("click",()=>{
+        if(redoStack.length===0) return;
+
+        undoStack.push(snapshot());
+
+        const next=redoStack.pop();
+        restore(next);
+        drawBoard();
+    })
+
+    resetBtn.addEventListener("click",()=>{
+        game=createNewGame();
+        undoStack=[];
+        redoStack=[];
+        drawBoard();
+    });
+    drawBoard();
 };
