@@ -48,7 +48,8 @@ window.onload = function () {
             capturedByWhite:[],
             capturedByBlack:[],
             moveList:[],
-            lastMove:null
+            lastMove:null,
+            enPassantTarget:null
         };
     };
 
@@ -67,7 +68,8 @@ window.onload = function () {
             capturedByWhite:game.capturedByWhite,
             capturedByBlack:game.capturedByBlack,
             moveList:game.moveList,
-            lastMove:game.lastMove
+            lastMove:game.lastMove,
+            enPassantTarget:game.enPassantTarget
         });
     }
 
@@ -80,6 +82,7 @@ window.onload = function () {
         game.capturedByBlack=state.capturedByBlack;
         game.moveList=state.moveList;
         game.lastMove=state.lastMove || null;
+        game.enPassantTarget=state.enPassantTarget || null;
     }
 
     function getPseudoMoves(r,c){
@@ -101,7 +104,7 @@ window.onload = function () {
                 const r2=r+2*dir;
 
                 if(r===startRow && !board[r2][c]){
-                    moves.push({from:{r,c},to:{r:r2,c}});
+                    moves.push({from:{r,c},to:{r:r2,c},doublePawn:true});
                 }
             }
 
@@ -109,6 +112,19 @@ window.onload = function () {
                 const rr=r+dir,cc=c+dc;
                 if(inBoard(rr,cc) && board[rr][cc] && board[rr][cc].color===enemy){
                     moves.push({from:{r,c},to:{r:rr,c:cc},capture:true});
+                }
+            }
+            
+            if(game.enPassantTarget){
+                const ep=game.enPassantTarget;
+                if(ep.r===r+dir && Math.abs(ep.c-c)===1){
+                    moves.push({
+                        from:{r,c},
+                        to:{r:ep.r,c:ep.c},
+                        capture:true,
+                        enPassant:true,
+                        enPassantPawn:{r:ep.pawnR,c:ep.pawnC}
+                    })
                 }
             }
         }
@@ -218,12 +234,17 @@ window.onload = function () {
 
         const b=game.board;
         const movingPiece=b[move.from.r][move.from.c];
-        const targetPiece=b[move.to.r][move.to.c];
+         let capturedPiece=b[move.to.r][move.to.c];
 
-        
-        if(targetPiece){
-            if(movingPiece.color==="w") game.capturedByWhite.push(targetPiece);
-            else game.capturedByBlack.push(targetPiece);
+        if(move.enPassant){
+            const cap=move.enPassantPawn;
+            capturedPiece=b[cap.r][cap.c];
+            b[cap.r][cap.c]=null;
+        }
+
+        if(capturedPiece){
+            if(movingPiece.color==="w") game.capturedByWhite.push(capturedPiece);
+            else game.capturedByBlack.push(capturedPiece);
         }
 
         b[move.to.r][move.to.c]=movingPiece;
@@ -241,6 +262,17 @@ window.onload = function () {
         game.lastMove={
             from:{r:move.from.r,c:move.from.c},
             to:{r:move.to.r,c:move.to.c}
+        }
+
+        game.enPassantTarget=null;
+        if(movingPiece.type==="P" && move.doublePawn){
+            const midR=(move.from.r+move.to.r)/2;
+            game.enPassantTarget={
+                r:midR,
+                c:move.from.c,
+                pawnR:move.to.r,
+                pawnC:move.to.c
+            };
         }
 
         game.turn=enemyOf(game.turn);
@@ -350,7 +382,7 @@ window.onload = function () {
 
                 const legal=game.legalMoves.find(m=>m.to.r===r && m.to.c===c);
                 if(legal){
-                    if(game.board[r][c]){
+                    if(game.board[r][c] || legal.enPassant){
                         sq.classList.add("legal-capture");
                     }
                     else{
