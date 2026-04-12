@@ -44,7 +44,8 @@ window.onload = function () {
             legalMoves:[],
             capturedByWhite:[],
             capturedByBlack:[],
-            moveList:[]
+            moveList:[],
+            lastMove:null
         }
     };
 
@@ -61,7 +62,8 @@ window.onload = function () {
             legalMoves:[],
             capturedByWhite:game.capturedByWhite,
             capturedByBlack:game.capturedByBlack,
-            moveList:game.moveList
+            moveList:game.moveList,
+            lastMove:game.lastMove
         });
     }
 
@@ -73,6 +75,7 @@ window.onload = function () {
         game.capturedByWhite=state.capturedByWhite;
         game.capturedByBlack=state.capturedByBlack;
         game.moveList=state.moveList;
+        game.lastMove=state.lastMove || null;
     }
 
     function getPseudoMoves(r,c){
@@ -202,6 +205,11 @@ window.onload = function () {
         game.turn=enemyOf(game.turn);
         game.selected=null;
         game.legalMoves=[];
+
+        game.lastMove={
+            from:{r:move.from.r,c:move.from.c},
+            to:{r:move.to.r,c:move.to.c}
+        }
     }
 
     function isSameMove(a,b){
@@ -284,6 +292,14 @@ window.onload = function () {
                 sq.className = "square "+((r+c)%2===0?"light":"dark");
                 sq.dataset.r=r;
                 sq.dataset.c=c;
+
+                if(game.lastMove){
+                    const isFrom=game.lastMove.from.r===r && game.lastMove.from.c===c;
+                    const isTo=game.lastMove.to.r===r && game.lastMove.to.c===c;
+                    if(isFrom || isTo){
+                        sq.classList.add("last-move");
+                    }
+                }
             
                 if(game.selected && game.selected.r===r && game.selected.c===c){
                     sq.classList.add("selected");
