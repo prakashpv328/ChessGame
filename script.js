@@ -136,7 +136,7 @@ window.onload = function () {
     }
 
     function pieceIconHtml(color,type){
-        return `<img class="move-piece-icon" src="${IMG[color+type]}" alt="${color+type}" width="16" height="16">`;
+        return `<img class="move-piece-icon" src="${IMG[color+type]}" alt="${color+type}"/>`;
     }
 
     function getSimpleMoveText(piece,move){
@@ -204,23 +204,17 @@ window.onload = function () {
 
         game.capturedByWhite.forEach(pc=>{
             const img=document.createElement("img");
+            img.className="captured-piece";
             img.src=IMG[pc.color+pc.type];
             img.alt=pc.color+pc.type;
-            img.style.width="22px";
-            img.style.height="22px";
-            img.style.objectFit="contain";
-            img.style.verticalAlign="middle";
             capturedByWhiteEl.appendChild(img);
         })
 
         game.capturedByBlack.forEach(pc=>{
             const img=document.createElement("img");
+            img.className="captured-piece";
             img.src=IMG[pc.color+pc.type];
             img.alt=pc.color+pc.type;
-            img.style.width="22px";
-            img.style.height="22px";
-            img.style.objectFit="contain";
-            img.style.verticalAlign="middle";
             capturedByBlackEl.appendChild(img);
         });
     }
@@ -231,10 +225,6 @@ window.onload = function () {
         for(let i=0;i<game.moveList.length;i+=2){
             const row=document.createElement("div");
             row.className="move-row";
-            row.style.display="grid";
-            row.style.gridTemplateColumns="32px 1fr 1fr";
-            row.style.gap="6px";
-            row.style.padding="2px 0";
 
             const moveNo=(i/2)+1;
             const w=game.moveList[i];
@@ -247,6 +237,7 @@ window.onload = function () {
             `;
             movesEl.appendChild(row);
         }
+        movesEl.scrollTop=movesEl.scrollHeight;
     }
 
     function drawBoard(){
@@ -260,21 +251,17 @@ window.onload = function () {
             sq.dataset.c=c;
             
             if(game.selected && game.selected.r===r && game.selected.c===c){
-                sq.style.outline="3px solid #ece85a";
-                sq.style.outlineOffset="-3px";
+                sq.classList.add("selected");
             }
 
             const legal=game.legalMoves.find(m=>m.to.r===r && m.to.c===c);
             if(legal){
                 if(game.board[r][c]){
-                    sq.style.background="#ef4b2e";
+                    sq.classList.add("legal-capture");
                 }
                 else{
                     const dot=document.createElement("div");
-                    dot.style.width="22px";
-                    dot.style.height="22px";
-                    dot.style.borderRadius="50%";
-                    dot.style.background="rgba(120,120,120,.35)";
+                    dot.className="legal-dot";
                     sq.appendChild(dot);
                 }
             }
