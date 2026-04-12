@@ -357,7 +357,7 @@ window.onload = function () {
         return `<img class="move-piece-icon" src="${IMG[color+type]}" alt="${color+type}"/>`;
     }
 
-    function getMoveText(piece,move){
+    function getMoveText(piece,move,checkSuffix=""){
         if(move.castle==="K") return "O-O";
         if(move.castle==="Q") return "O-O-O";
 
@@ -365,7 +365,7 @@ window.onload = function () {
         const letter=piece.type==="P"?"":piece.type;
         const take=move.capture?"x":"";
         const promo=move.promotion?"="+move.promotion:"";
-        return letter+take+to+promo;
+        return letter+take+to+promo+checkSuffix;
     }    
 
     function isPromotionMove(move){
@@ -483,10 +483,10 @@ window.onload = function () {
 
         updateCastlingRights(move,movingPiece,capturedPiece);
         
-        game.moveList.push({
-            icon :pieceIconHtml(movingPiece.color,movingPiece.type),
-            text:getMoveText(movingPiece,move)
-        });
+        // game.moveList.push({
+        //     icon :pieceIconHtml(movingPiece.color,movingPiece.type),
+        //     text:getMoveText(movingPiece,move)
+        // });
 
         game.lastMove={
             from:{r:move.from.r,c:move.from.c},
@@ -507,6 +507,16 @@ window.onload = function () {
         game.turn=enemyOf(game.turn);
         game.selected=null;
         game.legalMoves=[];
+
+        const opponent=game.turn;
+        const oppInCheck=isKingInCheckOnBoard(game.board,opponent);
+        const oppHasLegal=hasAnyLegalMove(opponent);
+        const suffix=oppInCheck?(oppHasLegal?"+":"#"):"";
+
+        game.moveList.push({
+            icon:pieceIconHtml(movingPiece.color,movingPiece.type),
+            text:getMoveText(movingPiece,move,suffix)
+        });
 
         updateGameEndState();
     }
