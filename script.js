@@ -9,6 +9,9 @@ window.onload = function () {
     const redoBtn=document.getElementById("redoBtn");
     const resetBtn=document.getElementById("resetBtn");
 
+    const promotionModal=document.getElementById("promotionModal");
+    const promotionChoicesEl=document.getElementById("promotionChoices");
+
     const IMG = {
         wK:"pieces/white/king.png",wQ:"pieces/white/queen.png",wR:"pieces/white/rook.png",wB:"pieces/white/bishop.png",wN:"pieces/white/knight.png",wP:"pieces/white/pawn.png",
         bK:"pieces/black/king.png",bQ:"pieces/black/queen.png",bR:"pieces/black/rook.png",bB:"pieces/black/bishop.png",bN:"pieces/black/knight.png",bP:"pieces/black/pawn.png"
@@ -46,13 +49,14 @@ window.onload = function () {
             capturedByBlack:[],
             moveList:[],
             lastMove:null
-        }
+        };
     };
 
     let game=createNewGame();
-
     let undoStack=[];
     let redoStack=[];
+
+    let pendingPromotionMove=null;
 
     function snapshot(){
         return clone({
@@ -87,7 +91,7 @@ window.onload = function () {
         const enemy=enemyOf(me);
         const moves=[];
 
-        if(piece.type=="P"){
+        if(piece.type==="P"){
             const dir=me==="w"?-1:1;
             const startRow=me==="w"?6:1;
 
@@ -123,7 +127,6 @@ window.onload = function () {
 
         if(piece.type==="B" || piece.type==="R" || piece.type==="Q"){
             const dirs=[];
-
             if(piece.type==="B" || piece.type==="Q"){
                 dirs.push([-1,-1],[-1,1],[1,-1],[1,1]);
             }
@@ -164,24 +167,52 @@ window.onload = function () {
                 }
             }
         }
-
         return moves;
-
     }
 
     function pieceIconHtml(color,type){
         return `<img class="move-piece-icon" src="${IMG[color+type]}" alt="${color+type}"/>`;
     }
 
-    function getSimpleMoveText(piece,move){
+    function getMoveText(piece,move){
         const to =squareName(move.to.r,move.to.c);
         const letter=piece.type==="P"?"":piece.type;
         const take=move.capture?"x":"";
-        return letter+take+to;
+        const promo=move.promotion?"="+move.promotion:"";
+        return letter+take+to+promo;
+    }    
+
+    function isPromotionMove(move){
+        const movingPiece=game.board[move.from.r][move.from.c];
+        if(!movingPiece || movingPiece.type!=="P") return false;
+        return (movingPiece.color==="w" && move.to.r===0) || (movingPiece.color==="b" && move.to.r===7);
+    }
+    
+
+    function openPromotionModal(color){
+        promotionChoicesEl.innerHTML="";
+        const options=["Q","R","B","N"];
+
+        options.forEach(type=>{
+            const btn=document.createElement("button");
+            btn.className="promotion-btn";
+            btn.innerHTML=`<img src=${IMG[color+type]} alt="${color+type}"/>`;
+
+            btn.addEventListener("click",()=>{
+                if(!pendingPromotionMove) return;
+                pendingPromotionMove.promotion=type;
+                promotionModal.classList.add("hidden");
+                finalizeMove(pendingPromotionMove);
+                pendingPromotionMove=null;
+                drawBoard();
+            });
+
+            promotionChoicesEl.appendChild(btn);
+        })
+        promotionModal.classList.remove("hidden");
     }
 
-    function makeMove(move){
-
+    function finalizeMove(move){
         undoStack.push(snapshot());
         redoStack=[];
 
@@ -189,27 +220,32 @@ window.onload = function () {
         const movingPiece=b[move.from.r][move.from.c];
         const targetPiece=b[move.to.r][move.to.c];
 
-        game.moveList.push({
-            icon :pieceIconHtml(movingPiece.color,movingPiece.type),
-            text:getSimpleMoveText(movingPiece,move)
-        });
-
+        
         if(targetPiece){
-            if(targetPiece.color==="w") game.capturedByWhite.push(targetPiece);
+            if(movingPiece.color==="w") game.capturedByWhite.push(targetPiece);
             else game.capturedByBlack.push(targetPiece);
         }
 
         b[move.to.r][move.to.c]=movingPiece;
         b[move.from.r][move.from.c]=null;
 
-        game.turn=enemyOf(game.turn);
-        game.selected=null;
-        game.legalMoves=[];
+        if(move.promotion){
+            b[move.to.r][move.to.c]=p(movingPiece.color,move.promotion);
+        }
+        
+        game.moveList.push({
+            icon :pieceIconHtml(movingPiece.color,movingPiece.type),
+            text:getMoveText(movingPiece,move)
+        });
 
         game.lastMove={
             from:{r:move.from.r,c:move.from.c},
             to:{r:move.to.r,c:move.to.c}
         }
+
+        game.turn=enemyOf(game.turn);
+        game.selected=null;
+        game.legalMoves=[];
     }
 
     function isSameMove(a,b){
@@ -224,8 +260,15 @@ window.onload = function () {
         if(game.selected){
             const chosen=game.legalMoves.find(m=>m.to.r===r && m.to.c===c);
             if(chosen){
-                makeMove(chosen);
-                drawBoard();
+                if(isPromotionMove(chosen)){
+                    pendingPromotionMove=clone(chosen);
+                    const pawn=game.board[chosen.from.r][chosen.from.c];
+                    openPromotionModal(pawn.color);
+                }
+                else{
+                    finalizeMove(chosen);
+                    drawBoard();
+                }
                 return;
             }
         }
@@ -360,6 +403,8 @@ window.onload = function () {
         game=createNewGame();
         undoStack=[];
         redoStack=[];
+        pendingPromotionMove=null;
+        promotionModal.classList.add("hidden");
         drawBoard();
     });
     drawBoard();

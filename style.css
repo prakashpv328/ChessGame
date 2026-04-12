@@ -1,5 +1,5 @@
 :root{
-    --light:#c1c1aa;
+    --light:#ddddcc;
     --dark:#7ea35a;
     --frame:#0f1114;
     --bg:#1b1e22;
@@ -70,10 +70,10 @@ body{
 }
 
 .legal-dot{
-    width:22px;
-    height:22px;
+    width:25%;
+    height:25%;
     border-radius:50%;
-    background:rgba(120,120,120,0.35);
+    background:rgba(104, 104, 104, 0.35);
 }
 
 .piece{
@@ -199,4 +199,40 @@ button{
         flex-wrap:wrap;
         align-items:center;
     }
+}
+.promotion-modal{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.55);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:999;
+}
+.promotion-modal.hidden{
+    display:none;
+}
+.promotion-box{
+    background:#ffffff;
+    color:#111;
+    border-radius:10px;
+    padding:14px;
+    min-height: 200px;
+}
+.promotion-choices{
+    margin-top:10px;
+    display:flex;
+    gap:10px;
+}
+.promotion-btn{
+    border:1px solid #bbb;
+    border-radius:8px;
+    background:#f7f7f7;
+    padding:6px;
+    cursor:pointer;
+}
+.promotion-btn img{
+    width:44px;
+    height:44px;
+    object-fit:contain;
 }
