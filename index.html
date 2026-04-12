@@ -1,45 +1,45 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chess</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <div class="app">
-        <div id="board" class="board"></div>
-
-        <aside class="panel">
-            <h3 id="status">Chess Game</h3>
-
-            <div class="capture-box">
-                <div class="cap-title">Black captured</div>
-                <div id="capturedByWhite" class="captured-row"></div>
-            </div>
-
-            <div class="buttons">
-                <button id="undoBtn">Undo</button>
-                <button id="redoBtn">Redo</button>
-                <button id="resetBtn">Reset</button>
-            </div>
-
-            <div id="moves" class="moves"></div>
-
-            <div class="capture-box">
-                <div class="cap-title">White captured</div>
-                <div id="capturedByBlack" class="captured-row"></div>
-            </div>
-
-        </aside>
-
-    </div>
-    <div id="promotionModal" class="promotion-modal hidden">
-        <div class="promotion-box">
-            <h4>Choose Promotion</h4>
-            <div id="promotionChoices" class="promotion-choices"></div>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Chess</title>
+        <link rel="stylesheet" href="style.css">
+    </head>
+    <body>
+        <div class="app">
+            <div id="board" class="board"></div>
+        
+            <aside class="panel">
+                <h3 id="status">Chess Game</h3>
+            
+                <div class="capture-box">
+                    <div class="cap-title">Black captured</div>
+                    <div id="capturedByWhite" class="captured-row"></div>
+                </div>
+            
+                <div class="buttons">
+                    <button id="undoBtn">Undo</button>
+                    <button id="redoBtn">Redo</button>
+                    <button id="resetBtn">Reset</button>
+                </div>
+            
+                <div id="moves" class="moves"></div>
+            
+                <div class="capture-box">
+                    <div class="cap-title">White captured</div>
+                    <div id="capturedByBlack" class="captured-row"></div>
+                </div>
+            
+            </aside>
+        
         </div>
-    </div>
-    <script src="script.js"></script>
-</body>
+        <div id="promotionModal" class="promotion-modal hidden">
+            <div class="promotion-box">
+                <h4>Choose Promotion</h4>
+                <div id="promotionChoices" class="promotion-choices"></div>
+            </div>
+        </div>
+        <script src="script.js"></script>
+    </body>
 </html>

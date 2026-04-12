@@ -49,7 +49,11 @@ window.onload = function () {
             capturedByBlack:[],
             moveList:[],
             lastMove:null,
-            enPassantTarget:null
+            enPassantTarget:null,
+            castlingRights:{
+                w:{K:true,Q:true},
+                b:{K:true,Q:true}
+            }
         };
     };
 
@@ -69,7 +73,8 @@ window.onload = function () {
             capturedByBlack:game.capturedByBlack,
             moveList:game.moveList,
             lastMove:game.lastMove,
-            enPassantTarget:game.enPassantTarget
+            enPassantTarget:game.enPassantTarget,
+            castlingRights:game.castlingRights
         });
     }
 
@@ -83,6 +88,63 @@ window.onload = function () {
         game.moveList=state.moveList;
         game.lastMove=state.lastMove || null;
         game.enPassantTarget=state.enPassantTarget || null;
+        game.castlingRights=state.castlingRights || {w:{K:true,Q:true},b:{K:true,Q:true}};
+    }
+
+    function isSquareAttacked(r,c,byColor){
+        const b=game.board;
+
+        const pawnDir = byColor==="w"?-1:1;
+        for(const dc of [-1,1]){
+            const rr=r-pawnDir,cc=c+dc;
+            if(inBoard(rr,cc) && b[rr][cc] && b[rr][cc].color===byColor && b[rr][cc].type==="P")
+                return true;
+        }
+
+        const nMoves=[[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]];
+        for(const [dr,dc] of nMoves){
+            const rr=r+dr,cc=c+dc;
+            if(inBoard(rr,cc) && b[rr][cc] && b[rr][cc].color===byColor && b[rr][cc].type==="N")
+                return true;
+        }
+
+        for(let dr=-1;dr<=1;dr++){
+            for(let dc=-1;dc<=1;dc++){
+                if(dr===0 && dc===0) continue;
+                const rr=r+dr,cc=c+dc;
+                if(inBoard(rr,cc) && b[rr][cc] && b[rr][cc].color===byColor && b[rr][cc].type==="K")
+                    return true;
+            }
+        }
+
+        for(const [dr,dc] of [[-1,-1],[-1,1],[1,-1],[1,1]]){
+            let rr=r+dr,cc=c+dc;
+            while(inBoard(rr,cc)){
+                if(b[rr][cc]){
+                    if(b[rr][cc].color===byColor && (b[rr][cc].type==="B" || b[rr][cc].type==="Q"))
+                        return true;
+                    break;
+                }
+                rr+=dr;
+                cc+=dc;
+            }
+        }
+
+        for(const [dr,dc] of [[-1,0],[0,-1],[0,1],[1,0]]){
+            let rr=r+dr,cc=c+dc;
+            while(inBoard(rr,cc)){
+                if(b[rr][cc]){
+                    if(b[rr][cc].color===byColor && (b[rr][cc].type==="R" || b[rr][cc].type==="Q"))
+                        return true;
+                    break;  
+                }
+                rr+=dr;
+                cc+=dc;
+            }
+        }
+        
+        return false;
+
     }
 
     function getPseudoMoves(r,c){
@@ -182,6 +244,40 @@ window.onload = function () {
                     }  
                 }
             }
+
+            const homeRow=me==="w"?7:0;
+
+            if(r===homeRow && c===4 && game.castlingRights[me].K){
+                if(!board[homeRow][5] && !board[homeRow][6] && board[homeRow][7]
+                    && board[homeRow][7].type==="R" && board[homeRow][7].color===me){
+
+                    if(!isSquareAttacked(homeRow,4,enemy) &&
+                        !isSquareAttacked(homeRow,5,enemy) &&
+                        !isSquareAttacked(homeRow,6,enemy)){
+                            moves.push({
+                                from:{r,c},
+                                to:{r:homeRow,c:6},
+                                castle:"K"
+                            });
+                    }
+                }
+            }
+
+            if(r===homeRow && c===4 && game.castlingRights[me].Q){
+                if(!board[homeRow][1] && !board[homeRow][2] && !board[homeRow][3] &&
+                   board[homeRow][0] && board[homeRow][0].type==="R" && board[homeRow][0].color===me){
+                    if(!isSquareAttacked(homeRow,4,enemy) &&
+                       !isSquareAttacked(homeRow,3,enemy) &&
+                       !isSquareAttacked(homeRow,2,enemy)){
+                        moves.push({
+                            from:{r,c},
+                            to:{r:homeRow,c:2},
+                            castle:"Q"
+                        });
+                    }
+                }
+            }
+
         }
         return moves;
     }
@@ -191,6 +287,9 @@ window.onload = function () {
     }
 
     function getMoveText(piece,move){
+        if(move.castle==="K") return "O-O";
+        if(move.castle==="Q") return "O-O-O";
+
         const to =squareName(move.to.r,move.to.c);
         const letter=piece.type==="P"?"":piece.type;
         const take=move.capture?"x":"";
@@ -228,6 +327,31 @@ window.onload = function () {
         promotionModal.classList.remove("hidden");
     }
 
+    function updateCastlingRights(move,movingPiece,capturedPiece){
+        const me=movingPiece.color;
+
+        if(movingPiece.type==="K"){
+            game.castlingRights[me].K=false;
+            game.castlingRights[me].Q=false;
+        }
+
+        if(movingPiece.type==="R"){
+            if(me==="w" && move.from.r===7 && move.from.c===0) game.castlingRights.w.Q=false;
+            if(me==="w" && move.from.r===7 && move.from.c===7) game.castlingRights.w.K=false;
+            if(me==="b" && move.from.r===0 && move.from.c===0) game.castlingRights.b.Q=false;
+            if(me==="b" && move.from.r===0 && move.from.c===7) game.castlingRights.b.K=false;
+        }
+
+        if(capturedPiece && capturedPiece.type==="R"){
+            const ec = capturedPiece.color;
+            if(ec==="w" && move.to.r===7 && move.to.c===0) game.castlingRights.w.Q=false;
+            if(ec==="w" && move.to.r===7 && move.to.c===7) game.castlingRights.w.K=false;
+            if(ec==="b" && move.to.r===0 && move.to.c===0) game.castlingRights.b.Q=false;
+            if(ec==="b" && move.to.r===0 && move.to.c===7) game.castlingRights.b.K=false;
+        }
+
+    }
+
     function finalizeMove(move){
         undoStack.push(snapshot());
         redoStack=[];
@@ -250,9 +374,22 @@ window.onload = function () {
         b[move.to.r][move.to.c]=movingPiece;
         b[move.from.r][move.from.c]=null;
 
+        if(move.castle==="K"){
+            const row = movingPiece.color==="w" ? 7 : 0;
+            b[row][5] = b[row][7];
+            b[row][7] = null;
+        } else if(move.castle==="Q"){
+            const row = movingPiece.color==="w" ? 7 : 0;
+            b[row][3] = b[row][0];
+            b[row][0] = null;
+        }
+
+        
         if(move.promotion){
             b[move.to.r][move.to.c]=p(movingPiece.color,move.promotion);
         }
+
+        updateCastlingRights(move,movingPiece,capturedPiece);
         
         game.moveList.push({
             icon :pieceIconHtml(movingPiece.color,movingPiece.type),
