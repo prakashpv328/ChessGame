@@ -60,7 +60,6 @@ window.onload = function () {
     let game=createNewGame();
     let undoStack=[];
     let redoStack=[];
-
     let pendingPromotionMove=null;
 
     function snapshot(){
@@ -91,8 +90,17 @@ window.onload = function () {
         game.castlingRights=state.castlingRights || {w:{K:true,Q:true},b:{K:true,Q:true}};
     }
 
-    function isSquareAttacked(r,c,byColor){
-        const b=game.board;
+    function findKing(board,color){
+        for(let r=0;r<8;r++){
+            for(let c=0;c<8;c++){
+                const x=board[r][c];
+                if(x && x.color===color && x.type==="K") return {r,c};
+            }
+        }
+        return null;
+    }
+
+    function isSquareAttackedOnBoard(b,r,c,byColor){
 
         const pawnDir = byColor==="w"?-1:1;
         for(const dc of [-1,1]){
@@ -144,6 +152,48 @@ window.onload = function () {
         }
         
         return false;
+    }
+
+    function isSquareAttacked(r,c,byColor){
+        return isSquareAttackedOnBoard(game.board,r,c,byColor);
+    }
+
+    function isKingInCheckOnBoard(board,color){
+        const k=findKing(board,color);
+        if(!k) return false;
+        return isSquareAttackedOnBoard(board,k.r,k.c,enemyOf(color));
+    }
+
+    function applyMoveToState(state,move){
+        const b=state.board;
+        const movingPiece=b[move.from.r][move.from.c];
+        const capturedPiece=b[move.to.r][move.to.c];
+
+        if(move.enPassant){
+            const cap=move.enPassantPawn;
+            capturedPiece=b[cap.r][cap.c];
+            b[cap.r][cap.c]=null;
+        }
+
+        b[move.to.r][move.to.c]=movingPiece;
+        b[move.from.r][move.from.c]=null;
+
+        if(move.castle==="K"){
+            const row=movingPiece.color==="w"?7:0;
+            b[row][5]=b[row][7];
+            b[row][7]=null;
+        }
+        else  if(move.castle==="Q"){
+            const row=movingPiece.color==="w"?7:0;
+            b[row][3]=b[row][0];
+            b[row][0]=null;
+        }
+
+        if(move.promotion){
+            b[move.to.r][move.to.c]=p(movingPiece.color,move.promotion);
+        }
+
+        return {movingPiece,capturedPiece};
 
     }
 
@@ -282,6 +332,23 @@ window.onload = function () {
         return moves;
     }
 
+    function  getLegalMoves(r,c){
+        const piece=game.board[r][c];
+        if(!piece || piece.color!==game.turn) return [];
+
+        const pseudo=getPseudoMoves(r,c);
+        const legal=[];
+
+        for(const mv of pseudo){
+            const test=clone(game);
+            applyMoveToState(test,mv);
+            if(!isKingInCheckOnBoard(test.board,piece.color)){
+                legal.push(mv);
+            }
+        }
+        return legal;
+    }
+
     function pieceIconHtml(color,type){
         return `<img class="move-piece-icon" src="${IMG[color+type]}" alt="${color+type}"/>`;
     }
@@ -417,6 +484,25 @@ window.onload = function () {
         game.legalMoves=[];
     }
 
+    function hasAnyLegalMove(color){
+        for(let r=0;r<8;r++){
+            for(let c=0;c<8;c++){
+                const piece=game.board[r][c];
+                if(piece && piece.color===color){
+                    const pseudo=getPseudoMoves(r,c);
+                    for(const mv of pseudo){
+                        const test=clone(game);
+                        applyMoveToState(test,mv);
+                        if(!isKingInCheckOnBoard(test.board,color)){
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
     function isSameMove(a,b){
         return a.from.r===b.from.r && a.from.c===b.from.c && a.to.r===b.to.r && a.to.c===b.to.c;
     }
@@ -444,13 +530,24 @@ window.onload = function () {
 
         if(clickedPiece && clickedPiece.color===game.turn){
             game.selected={r,c};
-            game.legalMoves=getPseudoMoves(r,c);
+            game.legalMoves=getLegalMoves(r,c);
         }
         else{
             game.selected=null;
             game.legalMoves=[];
         }
         drawBoard();
+    }
+
+    function getStatusText(){
+        const side=game.turn;
+        const check=isKingInCheckOnBoard(game.board,side);
+        const legal=hasAnyLegalMove(side);
+
+        if(check){
+            return `${side==="w"?"White":"Black"} in check`;
+        }
+        return `${side==="w"?"White":"Black"} to move`;
     }
 
     function drawCapturedPieces(){
@@ -543,7 +640,7 @@ window.onload = function () {
                 boardEl.appendChild(sq);
             }
         }
-        statusEl.textContent=`${game.turn === "w"?"White":"Black"} to move`;
+        statusEl.textContent=getStatusText();
         drawCapturedPieces();
         drawMoveList();
     }
