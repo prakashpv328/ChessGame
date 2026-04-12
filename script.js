@@ -53,7 +53,9 @@ window.onload = function () {
             castlingRights:{
                 w:{K:true,Q:true},
                 b:{K:true,Q:true}
-            }
+            },
+            gameOver:false,
+            gameResult:""
         };
     };
 
@@ -73,7 +75,9 @@ window.onload = function () {
             moveList:game.moveList,
             lastMove:game.lastMove,
             enPassantTarget:game.enPassantTarget,
-            castlingRights:game.castlingRights
+            castlingRights:game.castlingRights,
+            gameOver:game.gameOver,
+            gameResult:game.gameResult
         });
     }
 
@@ -88,6 +92,8 @@ window.onload = function () {
         game.lastMove=state.lastMove || null;
         game.enPassantTarget=state.enPassantTarget || null;
         game.castlingRights=state.castlingRights || {w:{K:true,Q:true},b:{K:true,Q:true}};
+        game.gameOver=!!state.gameOver;
+        game.gameResult=state.gameResult || "";
     }
 
     function findKing(board,color){
@@ -101,7 +107,6 @@ window.onload = function () {
     }
 
     function isSquareAttackedOnBoard(b,r,c,byColor){
-
         const pawnDir = byColor==="w"?-1:1;
         for(const dc of [-1,1]){
             const rr=r-pawnDir,cc=c+dc;
@@ -167,7 +172,7 @@ window.onload = function () {
     function applyMoveToState(state,move){
         const b=state.board;
         const movingPiece=b[move.from.r][move.from.c];
-        const capturedPiece=b[move.to.r][move.to.c];
+        let capturedPiece=b[move.to.r][move.to.c];
 
         if(move.enPassant){
             const cap=move.enPassantPawn;
@@ -327,7 +332,6 @@ window.onload = function () {
                     }
                 }
             }
-
         }
         return moves;
     }
@@ -419,6 +423,27 @@ window.onload = function () {
 
     }
 
+    function updateGameEndState(){
+        const side=game.turn;
+        const inCheck=isKingInCheckOnBoard(game.board,side);
+        const anyMove=hasAnyLegalMove(side);
+
+        if(!anyMove){
+            game.gameOver=true;
+            if(inCheck){
+                const winner=side==="w"?"Black":"White";
+                game.gameResult=`Checkmate! ${winner} wins`;
+            }
+            else{
+                game.gameResult="Stalemate! Draw";
+            }
+        }
+        else{
+            game.gameOver=false;
+            game.gameResult="";
+        }
+    }
+
     function finalizeMove(move){
         undoStack.push(snapshot());
         redoStack=[];
@@ -482,6 +507,8 @@ window.onload = function () {
         game.turn=enemyOf(game.turn);
         game.selected=null;
         game.legalMoves=[];
+
+        updateGameEndState();
     }
 
     function hasAnyLegalMove(color){
@@ -508,6 +535,8 @@ window.onload = function () {
     }
 
     function onSquareClick(e){
+        if(game.gameOver) return;
+
         const r=Number(e.currentTarget.dataset.r);
         const c=Number(e.currentTarget.dataset.c);
         const clickedPiece=game.board[r][c];
@@ -540,9 +569,12 @@ window.onload = function () {
     }
 
     function getStatusText(){
+        if(game.gameOver){
+            return game.gameResult;
+        }
+
         const side=game.turn;
         const check=isKingInCheckOnBoard(game.board,side);
-        const legal=hasAnyLegalMove(side);
 
         if(check){
             return `${side==="w"?"White":"Black"} in check`;
