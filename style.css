@@ -97,7 +97,7 @@ body{
 }
 
 .captured-row{
-    min-height:40px;
+    min-height:50px;
     display:flex;
     flex-wrap:wrap;
     gap:4px;
@@ -127,7 +127,7 @@ button{
     border:1px solid #2e3440;
     border-radius:8px;
     padding:8px;
-    min-height:360px;
+    min-height:340px;
     margin-bottom: 10px;
 }
 
@@ -137,4 +137,10 @@ button{
         flex-wrap:wrap;
         align-items:center;
     }
+}
+.move-piece-icon{
+  width:16px;
+  height:16px;
+  object-fit:contain;
+  vertical-align:middle;
 }

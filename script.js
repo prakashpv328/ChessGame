@@ -1,27 +1,32 @@
 window.onload = function () {
     const boardEl = document.getElementById("board");
     const statusEl= document.getElementById("status");
+    const movesEl=document.getElementById("moves");
+    const capturedByWhiteEl=document.getElementById("capturedByWhite");
+    const capturedByBlackEl=document.getElementById("capturedByBlack");
 
     const IMG = {
-        wK:"pieces/white/king.png", wQ:"pieces/white/queen.png", wR:"pieces/white/rook.png", wB:"pieces/white/bishop.png", wN:"pieces/white/knight.png", wP:"pieces/white/pawn.png",
-        bK:"pieces/black/king.png", bQ:"pieces/black/queen.png", bR:"pieces/black/rook.png", bB:"pieces/black/bishop.png", bN:"pieces/black/knight.png", bP:"pieces/black/pawn.png"
+        wK:"pieces/white/king.png",wQ:"pieces/white/queen.png",wR:"pieces/white/rook.png",wB:"pieces/white/bishop.png",wN:"pieces/white/knight.png",wP:"pieces/white/pawn.png",
+        bK:"pieces/black/king.png",bQ:"pieces/black/queen.png",bR:"pieces/black/rook.png",bB:"pieces/black/bishop.png",bN:"pieces/black/knight.png",bP:"pieces/black/pawn.png"
     };
 
     function p(color,type){ 
         return {color,type}; 
     }
 
+    const files=["a","b","c","d","e","f","g","h"];
     const inBoard=(r,c)=>r>=0 && r<8 && c>=0 && c<8;
     const enemyOf=(color)=>color==="w"?"b":"w";
+    const squareName=(r,c)=>files[c]+(8-r);
 
     function createStartBoard(){
         const b = Array.from({length:8},()=>Array(8).fill(null));
 
-        b[0] = [p("b","R"),p("b","N"),p("b","B"),p("b","Q"),p("b","K"),p("b","B"),p("b","N"),p("b","R")];
-        b[1] = Array.from({length:8},()=>p("b","P"));
+        b[0]=[p("b","R"),p("b","N"),p("b","B"),p("b","Q"),p("b","K"),p("b","B"),p("b","N"),p("b","R")];
+        b[1]=Array.from({length:8},()=>p("b","P"));
 
-        b[6] = Array.from({length:8},()=>p("w","P"));
-        b[7] = [p("w","R"),p("w","N"),p("w","B"),p("w","Q"),p("w","K"),p("w","B"),p("w","N"),p("w","R")];
+        b[6]=Array.from({length:8},()=>p("w","P"));
+        b[7]=[p("w","R"),p("w","N"),p("w","B"),p("w","Q"),p("w","K"),p("w","B"),p("w","N"),p("w","R")];
 
         return b;
     }
@@ -30,7 +35,10 @@ window.onload = function () {
         board:createStartBoard(),
         turn:"w",
         selected:null,
-        legalMoves:[]
+        legalMoves:[],
+        capturedByWhite:[],
+        capturedByBlack:[],
+        moveList:[]
     };
 
     function getPseudoMoves(r,c){
@@ -62,7 +70,7 @@ window.onload = function () {
             for(const dc of [-1,1]){
                 const rr=r+dir,cc=c+dc;
                 if(inBoard(rr,cc) && board[rr][cc] && board[rr][cc].color===enemy){
-                    moves.push({from:{r,c},to:{r:rr,c:cc}})
+                    moves.push({from:{r,c},to:{r:rr,c:cc},capture:true})
                 }
             }
         }
@@ -74,7 +82,7 @@ window.onload = function () {
                 const cc=c+dc;
                 if(!inBoard(rr,cc)) continue;
                 if(!board[rr][cc] || board[rr][cc].color!==me){
-                    moves.push({from:{r,c},to:{r:rr,c:cc}});
+                    moves.push({from:{r,c},to:{r:rr,c:cc},capture:!!board[rr][cc]});
                 }
             }
         }
@@ -99,7 +107,7 @@ window.onload = function () {
                     }
                     else{
                         if(board[rr][cc].color!==me){
-                            moves.push({from:{r,c},to:{r:rr,c:cc}})
+                            moves.push({from:{r,c},to:{r:rr,c:cc},capture:true});
                         }
                         break;
                     }
@@ -117,7 +125,7 @@ window.onload = function () {
                     const cc=c+dc;
                     if(!inBoard(rr,cc)) continue;
                     if(!board[rr][cc] || board[rr][cc].color!==me){
-                        moves.push({from:{r,c},to:{r:rr,c:cc}});
+                        moves.push({from:{r,c},to:{r:rr,c:cc},capture:!!board[rr][cc]});
                     }  
                 }
             }
@@ -127,9 +135,33 @@ window.onload = function () {
 
     }
 
+    function pieceIconHtml(color,type){
+        return `<img class="move-piece-icon" src="${IMG[color+type]}" alt="${color+type}" width="16" height="16">`;
+    }
+
+    function getSimpleMoveText(piece,move){
+        const to =squareName(move.to.r,move.to.c);
+        const letter=piece.type==="P"?"":piece.type;
+        const take=move.capture?"x":"";
+        return letter+take+to;
+    }
+
     function makeMove(move){
         const b=game.board;
-        b[move.to.r][move.to.c]=b[move.from.r][move.from.c];
+        const movingPiece=b[move.from.r][move.from.c];
+        const targetPiece=b[move.to.r][move.to.c];
+
+        game.moveList.push({
+            icon :pieceIconHtml(movingPiece.color,movingPiece.type),
+            text:getSimpleMoveText(movingPiece,move)
+        });
+
+        if(targetPiece){
+            if(targetPiece.color==="w") game.capturedByWhite.push(targetPiece);
+            else game.capturedByBlack.push(targetPiece);
+        }
+
+        b[move.to.r][move.to.c]=movingPiece;
         b[move.from.r][move.from.c]=null;
 
         game.turn=enemyOf(game.turn);
@@ -166,13 +198,64 @@ window.onload = function () {
         drawBoard();
     }
 
+    function drawCapturedPieces(){
+        capturedByWhiteEl.innerHTML="";
+        capturedByBlackEl.innerHTML="";
+
+        game.capturedByWhite.forEach(pc=>{
+            const img=document.createElement("img");
+            img.src=IMG[pc.color+pc.type];
+            img.alt=pc.color+pc.type;
+            img.style.width="22px";
+            img.style.height="22px";
+            img.style.objectFit="contain";
+            img.style.verticalAlign="middle";
+            capturedByWhiteEl.appendChild(img);
+        })
+
+        game.capturedByBlack.forEach(pc=>{
+            const img=document.createElement("img");
+            img.src=IMG[pc.color+pc.type];
+            img.alt=pc.color+pc.type;
+            img.style.width="22px";
+            img.style.height="22px";
+            img.style.objectFit="contain";
+            img.style.verticalAlign="middle";
+            capturedByBlackEl.appendChild(img);
+        });
+    }
+
+    function drawMoveList(){
+        movesEl.innerHTML="";
+
+        for(let i=0;i<game.moveList.length;i+=2){
+            const row=document.createElement("div");
+            row.className="move-row";
+            row.style.display="grid";
+            row.style.gridTemplateColumns="32px 1fr 1fr";
+            row.style.gap="6px";
+            row.style.padding="2px 0";
+
+            const moveNo=(i/2)+1;
+            const w=game.moveList[i];
+            const b=game.moveList[i+1];
+
+            row.innerHTML=`
+                <div>${moveNo}.</div>
+                <div>${w?w.icon+" "+w.text:""}</div>
+                <div>${b?b.icon+" "+b.text:""}</div>
+            `;
+            movesEl.appendChild(row);
+        }
+    }
+
     function drawBoard(){
-        boardEl.innerHTML = "";
+        boardEl.innerHTML="";
 
         for(let r=0;r<8;r++){
           for(let c=0;c<8;c++){
             const sq = document.createElement("div");
-            sq.className = "square " + ((r+c)%2===0 ? "light" : "dark");
+            sq.className = "square "+((r+c)%2===0?"light":"dark");
             sq.dataset.r=r;
             sq.dataset.c=c;
             
@@ -188,29 +271,31 @@ window.onload = function () {
                 }
                 else{
                     const dot=document.createElement("div");
-                    dot.style.width = "22px";
-                    dot.style.height = "22px";
-                    dot.style.borderRadius = "50%";
-                    dot.style.background = "rgba(120,120,120,.35)";
+                    dot.style.width="22px";
+                    dot.style.height="22px";
+                    dot.style.borderRadius="50%";
+                    dot.style.background="rgba(120,120,120,.35)";
                     sq.appendChild(dot);
                 }
             }
 
 
-            const piece = game.board[r][c];
+            const piece=game.board[r][c];
             if(piece){
-              const img = document.createElement("img");
-              img.className = "piece";
-              img.src = IMG[piece.color + piece.type];
-              img.alt = piece.color + piece.type;
+              const img=document.createElement("img");
+              img.className="piece";
+              img.src=IMG[piece.color+piece.type];
+              img.alt=piece.color+piece.type;
               sq.appendChild(img);
             }
 
-            sq.addEventListener("click", onSquareClick);
+            sq.addEventListener("click",onSquareClick);
             boardEl.appendChild(sq);
           }
         }
-        statusEl.textContent = `${game.turn === "w" ? "White" : "Black"} to move`;
+        statusEl.textContent=`${game.turn === "w"?"White":"Black"} to move`;
+        drawCapturedPieces();
+        drawMoveList();
     }
   drawBoard();
 };
