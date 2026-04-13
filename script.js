@@ -56,8 +56,9 @@ window.onload = function () {
                 w:{K:true,Q:true},
                 b:{K:true,Q:true}
             },
+            halfMoveClock:0,
             gameOver:false,
-            gameResult:""
+            gameResult:"",
         };
     };
 
@@ -78,6 +79,7 @@ window.onload = function () {
             lastMove:game.lastMove,
             enPassantTarget:game.enPassantTarget,
             castlingRights:game.castlingRights,
+            halfMoveClock:game.halfMoveClock,
             gameOver:game.gameOver,
             gameResult:game.gameResult
         });
@@ -96,6 +98,7 @@ window.onload = function () {
         game.castlingRights=state.castlingRights || {w:{K:true,Q:true},b:{K:true,Q:true}};
         game.gameOver=!!state.gameOver;
         game.gameResult=state.gameResult || "";
+        game.halfMoveClock=state.halfMoveClock || 0;
     }
 
     function findKing(board,color){
@@ -474,6 +477,14 @@ window.onload = function () {
             game.gameResult="Draw due to insufficient material";
             return;
         }
+
+        if(game.halfMoveClock>=100){
+            game.gameOver=true;
+            game.gameResult="Draw due to 50-move rule";
+            return;
+        }
+
+
         const side=game.turn;
         const inCheck=isKingInCheckOnBoard(game.board,side);
         const anyMove=hasAnyLegalMove(side);
@@ -511,6 +522,13 @@ window.onload = function () {
         if(capturedPiece){
             if(movingPiece.color==="w") game.capturedByWhite.push(capturedPiece);
             else game.capturedByBlack.push(capturedPiece);
+        }
+
+        if(movingPiece.type==="P" || capturedPiece){
+            game.halfMoveClock=0;
+        }
+        else{
+            game/halfMoveClock++;
         }
 
         b[move.to.r][move.to.c]=movingPiece;
