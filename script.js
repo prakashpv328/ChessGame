@@ -14,6 +14,9 @@ window.onload = function () {
 
     const exportPgnBtn=document.getElementById("exportPgnBtn");
 
+    const claim50Btn=document.getElementById("claim50Btn");
+    const claim3foldBtn=document.getElementById("claim3foldBtn");
+
     const IMG = {
         wK:"pieces/white/king.png",wQ:"pieces/white/queen.png",wR:"pieces/white/rook.png",wB:"pieces/white/bishop.png",wN:"pieces/white/knight.png",wP:"pieces/white/pawn.png",
         bK:"pieces/black/king.png",bQ:"pieces/black/queen.png",bR:"pieces/black/rook.png",bB:"pieces/black/bishop.png",bN:"pieces/black/knight.png",bP:"pieces/black/pawn.png"
@@ -424,6 +427,14 @@ window.onload = function () {
         URL.revokeObjectURL(url);
     }
 
+    function canClaim50MoveRule(){
+        return game.halfMoveClock>=100;
+    }
+    function canClaimThreefold(){
+        const key=boardKey();
+        return (game.positionCounts[key] || 0) >= 3;
+    }
+
     function pieceIconHtml(color,type){
         return `<img class="move-piece-icon" src="${IMG[color+type]}" alt="${color+type}"/>`;
     }
@@ -453,7 +464,7 @@ window.onload = function () {
         options.forEach(type=>{
             const btn=document.createElement("button");
             btn.className="promotion-btn";
-            btn.innerHTML=`<img src=${IMG[color+type]} alt="${color+type}"/>`;
+            btn.innerHTML=`<img src="${IMG[color+type]}" alt="${color+type}"/>`;
 
             btn.addEventListener("click",()=>{
                 if(!pendingPromotionMove) return;
@@ -498,19 +509,6 @@ window.onload = function () {
         if(isInsufficientmaterial(game.board)){
             game.gameOver=true;
             game.gameResult="Draw due to insufficient material";
-            return;
-        }
-
-        if(game.halfMoveClock>=100){
-            game.gameOver=true;
-            game.gameResult="Draw due to 50-move rule";
-            return;
-        }
-
-        const key=boardKey();
-        if((game.positionCounts[key] || 0)>=3){
-            game.gameOver=true;
-            game.gameResult="Draw by threefold repetition";
             return;
         }
 
@@ -639,7 +637,7 @@ window.onload = function () {
     }
 
     function getBishopSquareColor(r,c){
-        return (r+c)%2==0?"light":"dark";
+        return (r+c)%2===0 ? "light" : "dark";
     }
 
     function isInsufficientmaterial(board){
@@ -873,6 +871,30 @@ window.onload = function () {
         const pgn=buildPgn();
         downloadTextFile("game.pgn",pgn);
     });
+
+    claim50Btn.addEventListener("click",()=>{
+        if(game.gameOver) return;
+        if(canClaim50MoveRule()){
+            game.gameOver=true;
+            game.gameResult="Draw claimed by 50-move rule";
+            drawBoard();
+        }
+        else{
+            alert("50-move draw is not claimable yet.")
+        }
+    });
+
+    claim3foldBtn.addEventListener("click",()=>{
+        if(game.gameOver) return;
+        if(canClaimThreefold()){
+            game.gameOver=true;
+            game.gameResult="Draw claimed by threefold repetition";
+            drawBoard();
+        }
+        else{
+            alert("Threefold repetition draw is not claimable yet.");
+        }
+    })
 
     bumpPositionCount();
     updateGameEndState();
