@@ -12,6 +12,8 @@ window.onload = function () {
     const promotionModal=document.getElementById("promotionModal");
     const promotionChoicesEl=document.getElementById("promotionChoices");
 
+    const exportPgnBtn=document.getElementById("exportPgnBtn");
+
     const IMG = {
         wK:"pieces/white/king.png",wQ:"pieces/white/queen.png",wR:"pieces/white/rook.png",wB:"pieces/white/bishop.png",wN:"pieces/white/knight.png",wP:"pieces/white/pawn.png",
         bK:"pieces/black/king.png",bQ:"pieces/black/queen.png",bR:"pieces/black/rook.png",bB:"pieces/black/bishop.png",bN:"pieces/black/knight.png",bP:"pieces/black/pawn.png"
@@ -351,6 +353,49 @@ window.onload = function () {
             }
         }
         return legal;
+    }
+
+    function getResultCode(){
+        if(!game.gameOver) return "*";
+
+        if(game.gameResult.includes("CheckMate! White wins")) return "1-0";
+        if(game.gameResult.includes("CheckMate! Black wins")) return "0-1";
+        if(game.gameResult.includes("Draw") || game.gameResult.includes("Stalemate")) return "1/2-1/2";
+
+        return "*";
+    }
+
+    function buildPgn(){
+        const headers=[
+            '[Event "Casual Game"]',
+            '[Site "Local"]',
+            `[Date "${new Date().toISOString().split("T")[0]}"]`,
+            '[Round "-"]',
+            '[White "Player1"]',
+            '[Black "Player2"]',
+            `[Result "${getResultCode()}"]`
+        ]
+        const moves=[];
+
+        for(let i=0;i<game.moveList.length;i+=2){
+            const n=(i/2)+1;
+            const w=game.moveList[i]?.text || "";
+            const b=game.moveList[i+1]?.text || "";
+            moves.push(`${n}. ${w}${b ? " " + b : ""}`);
+        }
+        return `${headers.join("\n")}\n\n${moves.join("\n")}\n${getResultCode()}`.trim();
+    }
+
+    function downloadTextFile(filename,text){
+        const blob=new Blob([text],{type:"text/plain;charset=utf-8"});
+        const url=URL.createObjectURL(blob);
+        const a=document.createElement("a");
+        a.href=url;
+        a.download=filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
     }
 
     function pieceIconHtml(color,type){
@@ -774,6 +819,12 @@ window.onload = function () {
         updateGameEndState();
         drawBoard();
     });
+
+    exportPgnBtn.addEventListener("click",()=>{
+        const pgn=buildPgn();
+        downloadTextFile("game.pgn",pgn);
+    });
+
     updateGameEndState();
     drawBoard();
 };
