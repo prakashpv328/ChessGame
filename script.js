@@ -424,6 +424,11 @@ window.onload = function () {
     }
 
     function updateGameEndState(){
+        if(isInsufficientmaterial(game.board)){
+            game.gameOver=true;
+            game.gameResult="Draw due to insufficient material";
+            return;
+        }
         const side=game.turn;
         const inCheck=isKingInCheckOnBoard(game.board,side);
         const anyMove=hasAnyLegalMove(side);
@@ -539,6 +544,51 @@ window.onload = function () {
         }
         return false;
     }
+
+    function getBishopSquareColor(r,c){
+        return (r+c)%2==0?"light":"dark";
+    }
+
+    function isInsufficientmaterial(board){
+        const white=[];
+        const black=[];
+
+        for(let r=0;r<8;r++){
+            for(let c=0;c<8;c++){
+                const piece=board[r][c];
+                if(!piece) continue;
+                if(piece.color==="w") white.push({type:piece.type,r,c});
+                else black.push({type:piece.type,r,c});
+            }
+        }
+
+        const heavy=["P","R","Q"];
+        if(white.some(p=>heavy.includes(p.type)) || black.some(p=>heavy.includes(p.type))){
+            return false;
+        }
+
+        if(white.length===1 && black.length===1) return true;
+
+        const wMinors=white.filter(p=>p.type==="B" || p.type==="N");
+        const bMinors=black.filter(p=>p.type==="B" || p.type==="N");
+
+        if(white.length===2 && black.length===1 && wMinors.length===1 && wMinors.length===1){
+            return true;
+        }
+        if(black.length===2 && white.length===1 && bMinors.length===1 && bMinors.length===1) {
+            return true;
+        }
+
+        if(white.length===2 && black.length===2 && 
+            wMinors.length===1 && bMinors.length===1 &&
+            wMinors[0].type==="B" && bMinors[0].type==="B"){
+                const wColor =getBishopSquareColor(wMinors[0].r,wMinors[0].c);
+                const bColor =getBishopSquareColor(bMinors[0].r,bMinors[0].c);
+                return wColor===bColor;
+        }
+        return false;
+    }
+   
 
     function isSameMove(a,b){
         return a.from.r===b.from.r && a.from.c===b.from.c && a.to.r===b.to.r && a.to.c===b.to.c;
@@ -713,7 +763,9 @@ window.onload = function () {
         redoStack=[];
         pendingPromotionMove=null;
         promotionModal.classList.add("hidden");
+        updateGameEndState();
         drawBoard();
     });
+    updateGameEndState();
     drawBoard();
 };
