@@ -687,6 +687,11 @@ window.onload = function () {
     function drawBoard(){
         boardEl.innerHTML="";
 
+        let checkedKing=null;
+        if(!game.gameOver && isKingInCheckOnBoard(game.board,game.turn)){
+            checkedKing=findKing(game.board,game.turn);
+        }
+
         for(let r=0;r<8;r++){
             for(let c=0;c<8;c++){
                 const sq = document.createElement("div");
@@ -718,6 +723,9 @@ window.onload = function () {
                     }
                 }
 
+                if(checkedKing && checkedKing.r===r && checkedKing.c===c){
+                    sq.classList.add("king-in-check");
+                }
 
                 const piece=game.board[r][c];
                 if(piece){
