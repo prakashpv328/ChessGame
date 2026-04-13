@@ -57,6 +57,7 @@ window.onload = function () {
                 b:{K:true,Q:true}
             },
             halfMoveClock:0,
+            positionCounts:{},
             gameOver:false,
             gameResult:"",
         };
@@ -80,6 +81,7 @@ window.onload = function () {
             enPassantTarget:game.enPassantTarget,
             castlingRights:game.castlingRights,
             halfMoveClock:game.halfMoveClock,
+            positionCounts:game.positionCounts,
             gameOver:game.gameOver,
             gameResult:game.gameResult
         });
@@ -96,9 +98,10 @@ window.onload = function () {
         game.lastMove=state.lastMove || null;
         game.enPassantTarget=state.enPassantTarget || null;
         game.castlingRights=state.castlingRights || {w:{K:true,Q:true},b:{K:true,Q:true}};
+        game.halfMoveClock=state.halfMoveClock || 0;
+        game.positionCounts=state.positionCounts || {};
         game.gameOver=!!state.gameOver;
         game.gameResult=state.gameResult || "";
-        game.halfMoveClock=state.halfMoveClock || 0;
     }
 
     function findKing(board,color){
@@ -358,11 +361,31 @@ window.onload = function () {
         return legal;
     }
 
+    function boardKey(){
+        const rows=[];
+        for(let r=0;r<8;r++){
+            let row="";
+            for(let c=0;c<8;c++){
+                const pc=game.board[r][c];
+                row+=pc ? (pc.color+pc.type) : "..";
+            }
+            rows.push(row);
+        }
+        const ep=game.enPassantTarget?`${game.enPassantTarget.r},${game.enPassantTarget.c}`:"-";
+        const cr=JSON.stringify(game.castlingRights);
+        return `${rows.join("|")} turn:${game.turn} ep:${ep} cr:${cr}`;
+    }
+
+    function bumpPositionCount(){
+        const key=boardKey();
+        game.positionCounts[key]=(game.positionCounts[key] || 0)+1;
+    }
+
     function getResultCode(){
         if(!game.gameOver) return "*";
 
-        if(game.gameResult.includes("CheckMate! White wins")) return "1-0";
-        if(game.gameResult.includes("CheckMate! Black wins")) return "0-1";
+        if(game.gameResult.includes("Checkmate! White wins")) return "1-0";
+        if(game.gameResult.includes("Checkmate! Black wins")) return "0-1";
         if(game.gameResult.includes("Draw") || game.gameResult.includes("Stalemate")) return "1/2-1/2";
 
         return "*";
@@ -406,8 +429,8 @@ window.onload = function () {
     }
 
     function getMoveText(piece,move,checkSuffix=""){
-        if(move.castle==="K") return "O-O";
-        if(move.castle==="Q") return "O-O-O";
+        if(move.castle==="K") return "O-O"+checkSuffix;
+        if(move.castle==="Q") return "O-O-O"+checkSuffix;
 
         const to =squareName(move.to.r,move.to.c);
         const letter=piece.type==="P"?"":piece.type;
@@ -484,6 +507,12 @@ window.onload = function () {
             return;
         }
 
+        const key=boardKey();
+        if((game.positionCounts[key] || 0)>=3){
+            game.gameOver=true;
+            game.gameResult="Draw by threefold repetition";
+            return;
+        }
 
         const side=game.turn;
         const inCheck=isKingInCheckOnBoard(game.board,side);
@@ -511,7 +540,7 @@ window.onload = function () {
 
         const b=game.board;
         const movingPiece=b[move.from.r][move.from.c];
-         let capturedPiece=b[move.to.r][move.to.c];
+        let capturedPiece=b[move.to.r][move.to.c];
 
         if(move.enPassant){
             const cap=move.enPassantPawn;
@@ -528,7 +557,7 @@ window.onload = function () {
             game.halfMoveClock=0;
         }
         else{
-            game/halfMoveClock++;
+            game.halfMoveClock++;
         }
 
         b[move.to.r][move.to.c]=movingPiece;
@@ -586,6 +615,7 @@ window.onload = function () {
             text:getMoveText(movingPiece,move,suffix)
         });
 
+        bumpPositionCount();
         updateGameEndState();
     }
 
@@ -635,10 +665,10 @@ window.onload = function () {
         const wMinors=white.filter(p=>p.type==="B" || p.type==="N");
         const bMinors=black.filter(p=>p.type==="B" || p.type==="N");
 
-        if(white.length===2 && black.length===1 && wMinors.length===1 && wMinors.length===1){
+        if(white.length===2 && black.length===1 && wMinors.length===1){
             return true;
         }
-        if(black.length===2 && white.length===1 && bMinors.length===1 && bMinors.length===1) {
+        if(black.length===2 && white.length===1 && bMinors.length===1) {
             return true;
         }
 
@@ -834,6 +864,7 @@ window.onload = function () {
         redoStack=[];
         pendingPromotionMove=null;
         promotionModal.classList.add("hidden");
+        bumpPositionCount();
         updateGameEndState();
         drawBoard();
     });
@@ -843,6 +874,7 @@ window.onload = function () {
         downloadTextFile("game.pgn",pgn);
     });
 
+    bumpPositionCount();
     updateGameEndState();
     drawBoard();
 };
