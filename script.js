@@ -792,6 +792,8 @@ window.onload = function () {
         dragFrom={r,c};
         game.selected={r,c};
         game.legalMoves=getLegalMoves(r,c);
+        
+        showLegalForDrag(); 
 
         const img=e.currentTarget.querySelector(".piece");
         if(img){
@@ -853,6 +855,28 @@ window.onload = function () {
         game.selected=null;
         game.legalMoves=[];
         drawBoard();
+    }
+
+    function showLegalForDrag(){
+
+        const s=boardEl.querySelector(`.square[data-r="${game.selected?.r}"][data-c="${game.selected?.c}"]`);
+        if(s){
+            s.classList.add("selected");
+        }
+
+        game.legalMoves.forEach(mv=>{
+            const sq=boardEl.querySelector(`.square[data-r="${mv.to.r}"][data-c="${mv.to.c}"]`);
+            if(!sq) return;
+
+            if(game.board[mv.to.r][mv.to.c] || mv.enPassant){
+                sq.classList.add("legal-capture");
+            }
+            else{
+                const dot=document.createElement("div");
+                dot.className="legal-dot";
+                sq.appendChild(dot);
+            }
+        });
     }
 
     function drawBoard(){
