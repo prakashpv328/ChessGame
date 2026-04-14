@@ -17,6 +17,14 @@ window.onload = function () {
     const claim50Btn=document.getElementById("claim50Btn");
     const claim3foldBtn=document.getElementById("claim3foldBtn");
 
+    const lobbyEl=document.getElementById("lobby");
+    const startGameBtn=document.getElementById("startGameBtn");
+    const whiteNameEl=document.getElementById("whiteName");
+    const blackNameEl=document.getElementById("blackName");
+
+    const appEl=document.querySelector(".app");
+
+
     const IMG = {
         wK:"pieces/white/king.png",wQ:"pieces/white/queen.png",wR:"pieces/white/rook.png",wB:"pieces/white/bishop.png",wN:"pieces/white/knight.png",wP:"pieces/white/pawn.png",
         bK:"pieces/black/king.png",bQ:"pieces/black/queen.png",bR:"pieces/black/rook.png",bB:"pieces/black/bishop.png",bN:"pieces/black/knight.png",bP:"pieces/black/pawn.png"
@@ -91,6 +99,13 @@ window.onload = function () {
     let redoStack=[];
     let pendingPromotionMove=null;
     let dragFrom=null;
+
+    let players={white:"Player1", black:"Player2"};
+    
+    function setGameUiEnabled(enabled){
+      boardEl.style.pointerEvents = enabled ? "auto" : "none";
+      [undoBtn,redoBtn,resetBtn,exportPgnBtn,claim50Btn,claim3foldBtn].forEach(btn=>btn.disabled=!enabled);
+    }
 
     function snapshot(){
         return clone({
@@ -1069,8 +1084,27 @@ window.onload = function () {
         }
     })
 
-    bumpPositionCount();
-    updateGameEndState();
-    playSound(SOUND.gameStart);
+    appEl.classList.add("hidden");
+    setGameUiEnabled(false);
     drawBoard();
+
+    startGameBtn.addEventListener("click",()=>{
+        players.white=(whiteNameEl?.value || "Player1").trim() || "Player1";
+        players.black=(blackNameEl?.value || "Player2").trim() || "Player2";
+
+        game=createNewGame();
+        undoStack=[];
+        redoStack=[];
+        pendingPromotionMove=null;
+        dragFrom=null;
+
+        bumpPositionCount();
+        updateGameEndState();
+        setGameUiEnabled(true);
+        appEl.classList.remove("hidden");
+        lobbyEl.classList.add("hidden");
+        playSound(SOUND.gameStart);
+        drawBoard();
+    });
+
 };

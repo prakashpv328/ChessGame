@@ -7,7 +7,31 @@
         <link rel="stylesheet" href="style.css">
     </head>
     <body>
-        <div class="app">
+
+        <div id="lobby" class="lobby-overlay">
+            <div class="lobby-board">
+                <div class="lobby-bg-grid"></div>
+                
+                <img class="lobby-piece lp-wk" src="pieces/white/king.png" alt="">
+                <img class="lobby-piece lp-wq" src="pieces/white/queen.png" alt="">
+                <img class="lobby-piece lp-bk" src="pieces/black/king.png" alt="">
+                <img class="lobby-piece lp-bq" src="pieces/black/queen.png" alt="">
+                <img class="lobby-piece lp-br" src="pieces/black/rook.png" alt="">
+                <img class="lobby-piece lp-wb" src="pieces/white/bishop.png" alt="">
+                <img class="lobby-piece lp-bp" src="pieces/black/pawn.png" alt="">
+                <img class="lobby-piece lp-wn" src="pieces/white/knight.png" alt="">
+                
+                <div class="lobby-content">
+
+                    <h1>CHESS LOBBY</h1>
+                    <p>Prepare for battle</p>
+                
+                    <button id="startGameBtn" class="start-btn">Start Game</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="app hidden">
             <div id="board" class="board"></div>
         
             <aside class="panel">
