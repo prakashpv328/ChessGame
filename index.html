@@ -10,6 +10,11 @@
 
         <div id="lobby" class="lobby-overlay">
             <div class="lobby-board">
+
+                <button id="lobbySettingsBtn" class="lobby-settings-btn" aria-label="Lobby settings">
+                    <img src="images/settings.png" alt="Settings">
+                </button>
+                
                 <div class="lobby-bg-grid"></div>
                 
                 <img class="lobby-piece lp-wk" src="pieces/white/king.png" alt="">
@@ -29,6 +34,30 @@
                     <button id="startGameBtn" class="start-btn">Start Game</button>
                 </div>
             </div>
+        </div>
+
+        <div id="settingsModal" class="settings-modal hidden">
+          <div class="settings-box">
+            <div class="settings-head">
+              <h3>Settings</h3>
+              <button id="closeSettingsBtn" class="settings-close-btn" aria-label="Close">✕</button>
+            </div>
+            <div class="settings-body">
+                settings
+            </div>
+          </div>
+        </div>
+
+        <div id="gameEndModal" class="result-modal hidden">
+          <div class="result-box">
+            <h3 id="resultTitle">Game Over</h3>
+            <img id="winnerKingImg" class="winner-king hidden" alt="Winner king">
+            <p id="resultText"></p>
+            <div class="result-actions">
+              <button id="restartFromPopupBtn">Restart</button>
+              <button id="backToLobbyBtn">Back to Lobby</button>
+            </div>
+          </div>
         </div>
 
         <div class="app hidden">

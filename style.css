@@ -22,6 +22,10 @@
     box-sizing:border-box;
 }
 
+.hidden{
+    display:none !important;
+}
+
 body{
     margin:0;
     min-height:100vh;
@@ -137,7 +141,7 @@ body{
     justify-content:center;
     z-index:4000;
 }
-.lobby-overlay.hidden{display:none;}
+.lobby-overlay.hidden{display:none !important;}
 
 .lobby-board{
     position:relative;
@@ -232,8 +236,57 @@ body{
 .lp-br{ width:88px; left:220px; top:110px; transform:rotate(+8deg); }
 
 @media (max-width:700px){
-  .lp-wk,.lp-bk{width:92px}
-  .lp-wq,.lp-bq{width:74px}
+    .lobby-overlay{
+        padding:14px;
+    }
+
+    .lobby-board{
+        width:min(94vw,94dvh);
+        height:min(94vw,94dvh);
+        border-radius:14px;
+    }
+
+    .lobby-content{
+        padding:16px;
+    }
+
+    .lobby-content h1{
+        letter-spacing:1.8px;
+        font-size:clamp(24px,6.4vw,34px);
+    }
+
+    .lobby-content p{
+        margin:6px 0 14px;
+        font-size:clamp(12px,3.2vw,15px);
+    }
+
+    .start-btn{
+        min-width:0;
+        width:min(240px,74vw);
+        padding:11px 14px;
+        font-size:.92rem;
+    }
+
+    .lobby-settings-btn{
+        top:10px;
+        right:10px;
+        width:40px;
+        height:40px;
+    }
+
+    .lobby-settings-btn img{
+        width:20px;
+        height:20px;
+    }
+
+    .lp-wk{ width:84px; left:10px; top:14px; }
+    .lp-bk{ width:84px; right:10px; bottom:14px; }
+    .lp-wq{ width:66px; right:86px; top:14px; }
+    .lp-bq{ width:66px; left:86px; bottom:14px; }
+    .lp-bp{ width:62px; right:14px; top:82px; }
+    .lp-wb{ width:58px; right:130px; bottom:84px; }
+    .lp-wn{ width:60px; left:14px; bottom:90px; }
+    .lp-br{ width:58px; left:132px; top:80px; }
 }
 
 .capture-box{
@@ -383,6 +436,108 @@ button:active{
     object-fit:contain;
 }
 
+.lobby-settings-btn{
+    position:absolute;
+    top:14px;
+    right:14px;
+    z-index:4;
+    width:44px;
+    height:44px;
+    border-radius:50%;
+    border:1px solid #3a4d6b;
+    background:rgba(18,26,40,.9);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    box-shadow:0 8px 18px rgba(0,0,0,.35);
+    padding:0;
+}
+.lobby-settings-btn img{
+    width:22px;
+    height:22px;
+    object-fit:contain;
+    pointer-events:none;
+}
+.lobby-settings-btn:hover{ opacity:.92; }
+
+
+.settings-modal{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.55);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:4300;
+}
+.settings-box{
+    width:min(420px,92vw);
+    min-height:220px;
+    background:#fff;
+    color:#111;
+    border-radius:14px;
+    box-shadow:0 18px 40px rgba(0,0,0,.35);
+    padding:12px;
+}
+.settings-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+.settings-head h3{
+    margin:0;
+}
+.settings-close-btn{
+    border:none;
+    border-radius:8px;
+    width:34px;
+    height:34px;
+    background:#e9eef8;
+    cursor:pointer;
+    font-weight:700;
+}
+.settings-body{
+  margin-top:12px;
+  min-height:140px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#6b7280;
+  font-weight:600;
+}
+
+.result-modal{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.62);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:4200;
+}
+.result-box{
+    width:min(390px,92vw);
+    background:#fff;
+    color:#111;
+    border-radius:14px;
+    padding:16px;
+    text-align:center;
+}
+.winner-king{
+    width:84px;
+    height:84px;
+    object-fit:contain;
+    margin:6px auto;
+    display:block;
+}
+.result-actions{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+    margin-top:10px;
+}
+
 @media(max-width:1024px){
     .app{
         grid-template-columns:auto 290px;
@@ -436,6 +591,56 @@ button:active{
     :root{
         --sq:min(11.8vmin,52px);
     }
+
+    .lobby-overlay{
+        padding:10px;
+    }
+
+    .lobby-board{
+        width:min(96vw,92dvh);
+        height:min(96vw,92dvh);
+    }
+
+    .lobby-content{
+        padding:14px;
+    }
+
+    .lobby-content h1{
+        font-size:clamp(20px,7.8vw,28px);
+        letter-spacing:1.1px;
+    }
+
+    .lobby-content p{
+        margin:6px 0 12px;
+        font-size:clamp(11px,3.5vw,14px);
+    }
+
+    .start-btn{
+        width:min(220px,78vw);
+        font-size:.85rem;
+        padding:10px 12px;
+    }
+
+    .lobby-settings-btn{
+        top:8px;
+        right:8px;
+        width:36px;
+        height:36px;
+    }
+
+    .lobby-settings-btn img{
+        width:18px;
+        height:18px;
+    }
+
+    .lp-wk{ width:70px; left:6px; top:12px; }
+    .lp-bk{ width:70px; right:6px; bottom:12px; }
+    .lp-wq{ width:56px; right:68px; top:10px; }
+    .lp-bq{ width:56px; left:68px; bottom:10px; }
+    .lp-bp{ width:52px; right:8px; top:72px; }
+    .lp-wb{ width:48px; right:102px; bottom:74px; }
+    .lp-wn{ width:50px; left:10px; bottom:76px; }
+    .lp-br{ width:48px; left:104px; top:72px; }
 
     .buttons{
         grid-template-columns:repeat(2,minmax(0,1fr));

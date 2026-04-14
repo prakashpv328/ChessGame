@@ -22,6 +22,17 @@ window.onload = function () {
     const whiteNameEl=document.getElementById("whiteName");
     const blackNameEl=document.getElementById("blackName");
 
+    const lobbySettingsBtn=document.getElementById("lobbySettingsBtn");
+    const settingsModal=document.getElementById("settingsModal");
+    const closeSettingsBtn=document.getElementById("closeSettingsBtn");
+    
+    const gameEndModal=document.getElementById("gameEndModal");
+    const resultTitle=document.getElementById("resultTitle");
+    const resultText=document.getElementById("resultText");
+    const winnerKingImg=document.getElementById("winnerKingImg");
+    const restartFromPopupBtn=document.getElementById("restartFromPopupBtn");
+    const backToLobbyBtn=document.getElementById("backToLobbyBtn");
+
     const appEl=document.querySelector(".app");
 
 
@@ -151,6 +162,57 @@ window.onload = function () {
             }
         }
         return null;
+    }
+
+    function openSettings(){
+        settingsModal.classList.remove("hidden");
+    }
+    function closeSettings(){
+        settingsModal.classList.add("hidden");
+    }
+
+    function openGameEndPopup(){
+        resultText.textContent=game.gameResult || "Game Over";
+        winnerKingImg.classList.add("hidden");
+        winnerKingImg.removeAttribute("src");
+    
+        if(game.gameResult.includes("Checkmate! White wins")){
+            resultTitle.textContent="White Wins!";
+            winnerKingImg.src=IMG.wK;
+            winnerKingImg.classList.remove("hidden");
+        }else if(game.gameResult.includes("Checkmate! Black wins")){
+            resultTitle.textContent="Black Wins!";
+            winnerKingImg.src=IMG.bK;
+            winnerKingImg.classList.remove("hidden");
+        }else{
+            resultTitle.textContent="Draw";
+        }
+    
+        gameEndModal.classList.remove("hidden");
+    }
+    
+    function closeGameEndPopup(){
+        gameEndModal.classList.add("hidden");
+    }
+    
+    function restartGameFromPopup(){
+        game=createNewGame();
+        undoStack=[];
+        redoStack=[];
+        pendingPromotionMove=null;
+        dragFrom=null;
+        bumpPositionCount();
+        updateGameEndState();
+        playSound(SOUND.gameStart);
+        closeGameEndPopup();
+        drawBoard();
+    }
+    
+    function backToLobby(){
+        closeGameEndPopup();
+        appEl.classList.add("hidden");
+        setGameUiEnabled(false);
+        lobbyEl.classList.remove("hidden");
     }
 
     function isSquareAttackedOnBoard(b,r,c,byColor){
@@ -654,6 +716,7 @@ window.onload = function () {
 
         if(game.gameOver){
             playSound(SOUND.gameEnd);
+            openGameEndPopup();
         }
         else if(move.promotion){
             playSound(SOUND.promote);
@@ -1065,6 +1128,8 @@ window.onload = function () {
         if(canClaim50MoveRule()){
             game.gameOver=true;
             game.gameResult="Draw claimed by 50-move rule";
+            playSound(SOUND.gameEnd);
+        openGameEndPopup();
             drawBoard();
         }
         else{
@@ -1077,12 +1142,24 @@ window.onload = function () {
         if(canClaimThreefold()){
             game.gameOver=true;
             game.gameResult="Draw claimed by threefold repetition";
+            playSound(SOUND.gameEnd);
+        openGameEndPopup();
             drawBoard();
         }
         else{
             alert("Threefold repetition draw is not claimable yet.");
         }
     })
+
+    lobbySettingsBtn.addEventListener("click",openSettings);
+    closeSettingsBtn.addEventListener("click",closeSettings);
+
+    settingsModal.addEventListener("click",(e)=>{
+        if(e.target===settingsModal) closeSettings();
+    });
+
+    restartFromPopupBtn.addEventListener("click",restartGameFromPopup);
+    backToLobbyBtn.addEventListener("click",backToLobby);
 
     appEl.classList.add("hidden");
     setGameUiEnabled(false);
