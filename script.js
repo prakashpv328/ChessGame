@@ -70,6 +70,7 @@ window.onload = function () {
     let undoStack=[];
     let redoStack=[];
     let pendingPromotionMove=null;
+    let dragFrom=null;
 
     function snapshot(){
         return clone({
@@ -775,6 +776,85 @@ window.onload = function () {
         movesEl.scrollTop=movesEl.scrollHeight;
     }
 
+    function onSquareDragStart(e){
+        if(game.gameOver) return;
+        e.stopPropagation();
+
+        const r=Number(e.currentTarget.dataset.r);
+        const c=Number(e.currentTarget.dataset.c);
+        const piece=game.board[r][c];
+
+        if(!piece || piece.color!==game.turn){
+            e.preventDefault();
+            return;
+        }
+
+        dragFrom={r,c};
+        game.selected={r,c};
+        game.legalMoves=getLegalMoves(r,c);
+
+        const img=e.currentTarget.querySelector(".piece");
+        if(img){
+            img.classList.add("dragging");
+        }
+        if(e.dataTransfer){
+            e.dataTransfer.setData("text/plain",`${r},${c}`);
+            e.dataTransfer.effectAllowed="move";
+        }
+    }
+
+    function onSquareDragOver(e){
+        if(!dragFrom || game.gameOver) return;
+        e.preventDefault();
+        e.currentTarget.classList.add("drag-over");
+    }
+
+    function onSquareDragLeave(e){
+        e.currentTarget.classList.remove("drag-over");
+    }
+
+    function onSquareDrop(e){
+        e.preventDefault();
+        e.currentTarget.classList.remove("drag-over");
+
+        if(!dragFrom) return;
+
+        const toR=Number(e.currentTarget.dataset.r);
+        const toC=Number(e.currentTarget.dataset.c);
+
+        const chosen=game.legalMoves.find(m=>m.to.r===toR && m.to.c===toC);
+
+        if(chosen){
+            if(isPromotionMove(chosen)){
+                pendingPromotionMove = clone(chosen);
+                const pawn = game.board[chosen.from.r][chosen.from.c];
+                openPromotionModal(pawn.color);
+                dragFrom = null;
+                return;
+            }
+            else{
+                finalizeMove(chosen);
+            }
+        }
+
+        dragFrom=null;
+        game.selected=null;
+        game.legalMoves=[];
+        drawBoard();
+    }
+
+    function onSquareDragEnd(e){
+        const img=e.currentTarget.querySelector(".piece");
+        if(img){
+            img.classList.remove("dragging");
+        }
+
+        dragFrom=null;
+        game.selected=null;
+        game.legalMoves=[];
+        drawBoard();
+    }
+
     function drawBoard(){
         boardEl.innerHTML="";
 
@@ -825,9 +905,20 @@ window.onload = function () {
                     img.src=IMG[piece.color+piece.type];
                     img.alt=piece.color+piece.type;
                     sq.appendChild(img);
+
+                    if(piece.color === game.turn){
+                        sq.draggable = true;
+                        sq.addEventListener("dragstart", onSquareDragStart);
+                        sq.addEventListener("dragend", onSquareDragEnd);
+                    }
+
                 }
 
                 sq.addEventListener("click",onSquareClick);
+                sq.addEventListener("dragover",onSquareDragOver);
+                sq.addEventListener("dragleave",onSquareDragLeave);
+                sq.addEventListener("drop",onSquareDrop);
+
                 boardEl.appendChild(sq);
             }
         }
