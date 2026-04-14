@@ -22,6 +22,26 @@ window.onload = function () {
         bK:"pieces/black/king.png",bQ:"pieces/black/queen.png",bR:"pieces/black/rook.png",bB:"pieces/black/bishop.png",bN:"pieces/black/knight.png",bP:"pieces/black/pawn.png"
     };
 
+    const SOUND={
+        gameStart:new Audio("sounds/game_start.mp3"),
+        moveSelf:new Audio("sounds/move_self.mp3"),
+        moveOpponent:new Audio("sounds/move_opponent.mp3"),
+        capture:new Audio("sounds/capture.mp3"),
+        castle:new Audio("sounds/castle.mp3"),
+        illegal:new Audio("sounds/illegal.mp3"),
+        promote:new Audio("sounds/promote.mp3"),
+        moveCheck:new Audio("sounds/move_check.mp3"),
+        gameEnd:new Audio("sounds/game_end.mp3"),
+    }
+
+    function playSound(audio){
+        if(!audio) return;
+        try{
+            audio.currentTime=0;
+            audio.play().catch(()=>{});
+        }catch(_){}
+    }
+
     function p(color,type){ 
         return {color,type}; 
     }
@@ -616,6 +636,30 @@ window.onload = function () {
 
         bumpPositionCount();
         updateGameEndState();
+
+        if(game.gameOver){
+            playSound(SOUND.gameEnd);
+        }
+        else if(move.promotion){
+            playSound(SOUND.promote);
+        }
+        else if(move.castle){
+            playSound(SOUND.castle);
+        }
+        else if(capturedPiece){
+            playSound(SOUND.capture);
+        }
+        else{
+            const sideJustMoved=movingPiece.color;
+            const inCheckNow=isKingInCheckOnBoard(game.board,game.turn);
+
+            if(inCheckNow){
+                playSound(SOUND.moveCheck);
+            }
+            else{
+                playSound(sideJustMoved==="w"?SOUND.moveSelf:SOUND.moveOpponent);
+            }
+        }
     }
 
     function hasAnyLegalMove(color){
@@ -707,6 +751,14 @@ window.onload = function () {
                 }
                 return;
             }
+            if(game.selected && !chosen){
+                playSound(SOUND.illegal);
+            }
+        }
+
+        if(clickedPiece && clickedPiece.color!==game.turn){
+            playSound(SOUND.illegal);
+            return;
         }
 
         if(clickedPiece && clickedPiece.color===game.turn){
@@ -785,6 +837,7 @@ window.onload = function () {
         const piece=game.board[r][c];
 
         if(!piece || piece.color!==game.turn){
+            playSound(SOUND.illegal);
             e.preventDefault();
             return;
         }
@@ -825,6 +878,10 @@ window.onload = function () {
         const toC=Number(e.currentTarget.dataset.c);
 
         const chosen=game.legalMoves.find(m=>m.to.r===toR && m.to.c===toC);
+
+        if(!chosen){
+            playSound(SOUND.illegal);
+        }
 
         if(chosen){
             if(isPromotionMove(chosen)){
@@ -979,6 +1036,7 @@ window.onload = function () {
         promotionModal.classList.add("hidden");
         bumpPositionCount();
         updateGameEndState();
+        playSound(SOUND.gameStart);
         drawBoard();
     });
 
@@ -1013,5 +1071,6 @@ window.onload = function () {
 
     bumpPositionCount();
     updateGameEndState();
+    playSound(SOUND.gameStart);
     drawBoard();
 };
