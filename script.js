@@ -36,8 +36,10 @@ window.onload = function () {
     const panelEl=document.querySelector(".panel");
 
     const suggestionsOnBtn=document.getElementById("suggestionsOnBtn");
-    const suggestionsOffBtn=document.getElementById("suggestionsOffBtn");
-    
+    const suggestionsOffBtn=document.getElementById("suggestionsOffBtn");    
+    const soundOnBtn=document.getElementById("soundOnBtn");
+    const soundOffBtn=document.getElementById("soundOffBtn");
+
     const gameEndModal=document.getElementById("gameEndModal");
     const resultTitle=document.getElementById("resultTitle");
     const resultText=document.getElementById("resultText");
@@ -77,7 +79,7 @@ window.onload = function () {
     }
 
     function playSound(audio){
-        if(!audio) return;
+        if(!showSound || !audio) return;
         try{
             audio.currentTime=0;
             audio.play().catch(()=>{});
@@ -144,6 +146,10 @@ window.onload = function () {
     let draftShowSuggestions=true;
     const SUGGESTIONS_KEY="chess-show-suggestions";
 
+    let showSound=true;
+    let draftShowSound=true;
+    const SOUND_KEY="chess-sound-enabled";
+
     function loadSavedSuggestions(){
         try{
             const saved=localStorage.getItem(SUGGESTIONS_KEY);
@@ -161,10 +167,56 @@ window.onload = function () {
         catch(_){}
     }
 
+
+    function loadSavedSoundSetting(){
+        try{
+            const saved=localStorage.getItem(SOUND_KEY);
+            if(saved==="true" || saved==="false"){
+                showSound=JSON.parse(saved);
+            }
+        }
+        catch(_){
+        }
+    }
+
+    function saveSoundSetting(){
+        try{
+            localStorage.setItem(SOUND_KEY,JSON.stringify(showSound));
+        }
+        catch(_){
+        }
+    }
+
+    function stopAllSounds(){
+        Object.values(SOUND).forEach(audio=>{
+            try{
+                audio.pause();
+                audio.currentTime=0;
+            }
+            catch(_){
+            }
+        })
+    }
+
+
+
+
     function updateSuggestionsButtons(val=draftShowSuggestions){
         if(!suggestionsOnBtn || !suggestionsOffBtn) return
         suggestionsOnBtn.classList.toggle("active",!!val);
         suggestionsOffBtn.classList.toggle("active",!val);
+    }
+
+    // function updateSoundButtons(val=draftShowSound){
+    //     if(!soundOnBtn || !soundOffBtn) return;
+    //     soundOnBtn.classList.toggle("active",!!val);
+    //     soundOffBtn.classList.toggle("active",!val);
+    // }
+
+    function updateSoundButtons(val=draftShowSound){
+        if(!soundOnBtn || !soundOffBtn) return;
+        soundOnBtn.classList.toggle("active",!!val);
+        soundOffBtn.classList.toggle("active",!val);
     }
 
 
@@ -281,8 +333,10 @@ window.onload = function () {
     function openSettings(){
         draftPlayerSide=playerSide;
         draftShowSuggestions=showSuggestions;
+        draftShowSound=showSound;
         updateSideButtons(draftPlayerSide);
         updateSuggestionsButtons(draftShowSuggestions);
+        updateSoundButtons(draftShowSound);
         settingsModal.classList.remove("hidden");
     }
     function closeSettings(){
@@ -674,6 +728,7 @@ window.onload = function () {
     function canClaim50MoveRule(){
         return game.halfMoveClock>=100;
     }
+    
     function canClaimThreefold(){
         const key=boardKey();
         return (game.positionCounts[key] || 0) >= 3;
@@ -1231,11 +1286,9 @@ window.onload = function () {
                     img.alt=piece.color+piece.type;
                     sq.appendChild(img);
 
-                    if(piece.color === game.turn){
-                        sq.draggable = true;
-                        sq.addEventListener("dragstart", onSquareDragStart);
-                        sq.addEventListener("dragend", onSquareDragEnd);
-                    }
+                    sq.draggable = true;
+                    sq.addEventListener("dragstart", onSquareDragStart);
+                    sq.addEventListener("dragend", onSquareDragEnd);
 
                 }
 
@@ -1314,12 +1367,17 @@ window.onload = function () {
 
     lobbySettingsBtn.addEventListener("click",openSettings);
     closeSettingsBtn.addEventListener("click",closeSettings);
+    
     saveSettingsBtn?.addEventListener("click",()=>{
         setPlayerSide(draftPlayerSide);
         showSuggestions=draftShowSuggestions;
+        showSound=draftShowSound;
         savePlayerSide();
         saveSuggestions();
-        closeSettings();
+        saveSoundSetting();
+        if(!showSound){
+            stopAllSounds();
+        }
         closeSettings();
     });
 
@@ -1334,6 +1392,16 @@ window.onload = function () {
     suggestionsOffBtn?.addEventListener("click",()=>{
         draftShowSuggestions=false;
         updateSuggestionsButtons();
+    });
+
+    soundOnBtn?.addEventListener("click",()=>{
+        draftShowSound=true;
+        updateSoundButtons();
+    });
+
+    soundOffBtn?.addEventListener("click",()=>{
+        draftShowSound=false;
+        updateSoundButtons();
     });
 
     settingsModal.addEventListener("click",(e)=>{
@@ -1353,14 +1421,21 @@ window.onload = function () {
 
     loadSavedPlayerSide();
     loadSavedSuggestions();
+    loadSavedSoundSetting();
 
     draftPlayerSide=playerSide;
     draftShowSuggestions=showSuggestions;
+    draftShowSound=showSound;
 
     updateBoardOrientation();
     updateSideButtons();
     updatePanelOrientation();
     updateSuggestionsButtons(draftShowSuggestions);
+    updateSoundButtons(draftShowSound);
+
+    if(!showSound){
+        stopAllSounds();
+    }
 
     drawBoard();
 
