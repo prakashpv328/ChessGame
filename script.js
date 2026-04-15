@@ -29,6 +29,9 @@ window.onload = function () {
 
     const whiteSideBtn=document.getElementById("whiteSideBtn");
     const blackSideBtn=document.getElementById("blackSideBtn");
+
+    const suggestionsOnBtn=document.getElementById("suggestionsOnBtn");
+    const suggestionsOffBtn=document.getElementById("suggestionsOffBtn");
     
     const gameEndModal=document.getElementById("gameEndModal");
     const resultTitle=document.getElementById("resultTitle");
@@ -75,6 +78,7 @@ window.onload = function () {
     const squareName=(r,c)=>files[c]+(8-r);
     const clone=(obj)=>JSON.parse(JSON.stringify(obj));
 
+
     function createStartBoard(){
         const b = Array.from({length:8},()=>Array(8).fill(null));
 
@@ -119,6 +123,34 @@ window.onload = function () {
     let playerSide="w";
     let draftPlayerSide="w";
     const PLAYER_SIDE_KEY="chess-player-side";
+
+    let showSuggestions=true;
+    let draftShowSuggestions=true;
+    const SUGGESTIONS_KEY="chess-show-suggestions";
+
+    function loadSavedSuggestions(){
+        try{
+            const saved=localStorage.getItem(SUGGESTIONS_KEY);
+            if(saved==="true" || saved==="false"){
+                showSuggestions=JSON.parse(saved);
+            }
+        }
+        catch(_){}
+    }
+
+    function saveSuggestions(){
+        try{
+            localStorage.setItem(SUGGESTIONS_KEY,JSON.stringify(showSuggestions));
+        }
+        catch(_){}
+    }
+
+    function updateSuggestionsButtons(val=draftShowSuggestions){
+        if(!suggestionsOnBtn || !suggestionsOffBtn) return
+        suggestionsOnBtn.classList.toggle("active",!!val);
+        suggestionsOffBtn.classList.toggle("active",!val);
+    }
+
 
     function loadSavedPlayerSide(){
         try{
@@ -219,7 +251,9 @@ window.onload = function () {
 
     function openSettings(){
         draftPlayerSide=playerSide;
+        draftShowSuggestions=showSuggestions;
         updateSideButtons(draftPlayerSide);
+        updateSuggestionsButtons(draftShowSuggestions);
         settingsModal.classList.remove("hidden");
     }
     function closeSettings(){
@@ -1048,6 +1082,7 @@ window.onload = function () {
     }
 
     function showLegalForDrag(){
+        if(!showSuggestions) return;
 
         const s=boardEl.querySelector(`.square[data-r="${game.selected?.r}"][data-c="${game.selected?.c}"]`);
         if(s){
@@ -1098,7 +1133,7 @@ window.onload = function () {
                 }
 
                 const legal=game.legalMoves.find(m=>m.to.r===r && m.to.c===c);
-                if(legal){
+                if(showSuggestions && legal){
                     if(game.board[r][c] || legal.enPassant){
                         sq.classList.add("legal-capture");
                     }
@@ -1211,12 +1246,25 @@ window.onload = function () {
     closeSettingsBtn.addEventListener("click",closeSettings);
     saveSettingsBtn?.addEventListener("click",()=>{
         setPlayerSide(draftPlayerSide);
+        showSuggestions=draftShowSuggestions;
         savePlayerSide();
+        saveSuggestions();
+        closeSettings();
         closeSettings();
     });
 
     whiteSideBtn?.addEventListener("click",()=>setDraftPlayerSide("w"));
     blackSideBtn?.addEventListener("click",()=>setDraftPlayerSide("b"));
+
+    suggestionsOnBtn?.addEventListener("click",()=>{
+        draftShowSuggestions=true;
+        updateSuggestionsButtons();
+    })
+
+    suggestionsOffBtn?.addEventListener("click",()=>{
+        draftShowSuggestions=false;
+        updateSuggestionsButtons();
+    });
 
     settingsModal.addEventListener("click",(e)=>{
         if(e.target===settingsModal) closeSettings();
@@ -1227,10 +1275,17 @@ window.onload = function () {
 
     appEl.classList.add("hidden");
     setGameUiEnabled(false);
+
     loadSavedPlayerSide();
+    loadSavedSuggestions();
+
     draftPlayerSide=playerSide;
+    draftShowSuggestions=showSuggestions;
+
     updateBoardOrientation();
     updateSideButtons();
+    updateSuggestionsButtons(draftShowSuggestions);
+
     drawBoard();
 
     startGameBtn.addEventListener("click",()=>{
