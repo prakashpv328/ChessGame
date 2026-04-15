@@ -117,6 +117,7 @@ body{
 }
 
 .panel{
+    margin-top: 6px;
     background:linear-gradient(180deg,var(--panel) 0%,var(--panel-2) 100%);
     border:1px solid #2a3342;
     border-radius:var(--radius);
@@ -319,7 +320,7 @@ body{
 
 .buttons{
     display:grid;
-    grid-template-columns:repeat(3,minmax(0,1fr));
+    grid-template-columns:repeat(5,minmax(0,1fr));
     gap:8px;
     margin-bottom:10px;
 }
@@ -349,7 +350,7 @@ button:active{
     border:1px solid #273141;
     border-radius:10px;
     padding:8px;
-    height:300px;
+    height:340px;
     overflow-y:auto;
     overflow-x:hidden;
     margin-bottom:10px;
@@ -614,7 +615,7 @@ button:active{
     }
 
     .buttons{
-        grid-template-columns:repeat(2,minmax(0,1fr));
+        grid-template-columns:repeat(5,minmax(0,1fr));
     }
 }
 
@@ -640,7 +641,7 @@ button:active{
     }
 
     .buttons{
-        grid-template-columns:repeat(3,minmax(0,1fr));
+        grid-template-columns:repeat(5,minmax(0,1fr));
     }
 
     .moves{
@@ -708,7 +709,7 @@ button:active{
     .lp-br{ width:48px; left:104px; top:72px; }
 
     .buttons{
-        grid-template-columns:repeat(2,minmax(0,1fr));
+        grid-template-columns:repeat(5,minmax(0,1fr));
     }
 
     button{
