@@ -5,6 +5,9 @@ window.onload = function () {
     const capturedByWhiteEl=document.getElementById("capturedByWhite");
     const capturedByBlackEl=document.getElementById("capturedByBlack");
 
+    const whiteCapPointsEl=document.getElementById("whiteCapPoints");
+    const blackCapPointsEl=document.getElementById("blackCapPoints");
+
     const undoBtn=document.getElementById("undoBtn");
     const redoBtn=document.getElementById("redoBtn");
     const resetBtn=document.getElementById("resetBtn");
@@ -27,6 +30,10 @@ window.onload = function () {
 
     const whiteSideBtn=document.getElementById("whiteSideBtn");
     const blackSideBtn=document.getElementById("blackSideBtn");
+
+    const capBoxWhite=document.getElementById("capBoxWhite");
+    const capBoxBlack=document.getElementById("capBoxBlack");
+    const panelEl=document.querySelector(".panel");
 
     const suggestionsOnBtn=document.getElementById("suggestionsOnBtn");
     const suggestionsOffBtn=document.getElementById("suggestionsOffBtn");
@@ -61,6 +68,12 @@ window.onload = function () {
         promote:new Audio("sounds/promote.mp3"),
         moveCheck:new Audio("sounds/move_check.mp3"),
         gameEnd:new Audio("sounds/game_end.mp3"),
+    }
+
+    const PIECE_POINTS={ P:1, N:3, B:3, R:5, Q:9, K:0 };
+
+    function totalCapturedPoints(arr){
+        return arr.reduce((sum,pc)=>sum+(PIECE_POINTS[pc.type] || 0),0);
     }
 
     function playSound(audio){
@@ -186,6 +199,7 @@ window.onload = function () {
         playerSide=side==="b" ? "b" : "w";
         updateBoardOrientation();
         updateSideButtons();
+        updatePanelOrientation();
         drawBoard();
     }
 
@@ -204,6 +218,18 @@ window.onload = function () {
     function setGameUiEnabled(enabled){
       boardEl.style.pointerEvents = enabled ? "auto" : "none";
       [undoBtn,redoBtn,resetBtn,claim50Btn,claim3foldBtn].forEach(btn=>btn.disabled=!enabled);
+    }
+
+    function updatePanelOrientation(){
+        if(!panelEl || !capBoxWhite || !capBoxBlack) return;
+
+        if(playerSide==="b"){
+            panelEl.insertBefore(capBoxWhite, panelEl.querySelector(".buttons"));
+            panelEl.appendChild(capBoxBlack);
+        }else{
+            panelEl.insertBefore(capBoxBlack, panelEl.querySelector(".buttons"));
+            panelEl.appendChild(capBoxWhite);
+        }
     }
 
     function snapshot(){
@@ -924,9 +950,9 @@ window.onload = function () {
     }
    
 
-    function isSameMove(a,b){
-        return a.from.r===b.from.r && a.from.c===b.from.c && a.to.r===b.to.r && a.to.c===b.to.c;
-    }
+    // function isSameMove(a,b){
+    //     return a.from.r===b.from.r && a.from.c===b.from.c && a.to.r===b.to.r && a.to.c===b.to.c;
+    // }
 
     function onSquareClick(e){
         if(game.gameOver) return;
@@ -1003,6 +1029,24 @@ window.onload = function () {
             img.alt=pc.color+pc.type;
             capturedByBlackEl.appendChild(img);
         });
+        const whiteTotal=totalCapturedPoints(game.capturedByWhite);
+        const blackTotal=totalCapturedPoints(game.capturedByBlack);
+            
+        const diff=whiteTotal-blackTotal;
+            
+        if(diff>0){
+            whiteCapPointsEl.textContent=`+${diff}`;
+            blackCapPointsEl.textContent="0";
+        }
+        else if(diff<0){
+            whiteCapPointsEl.textContent="0";
+            blackCapPointsEl.textContent=`+${-diff}`;
+        }
+        else{
+            whiteCapPointsEl.textContent="0";
+            blackCapPointsEl.textContent="0";
+        }
+
     }
 
     function drawMoveList(){
@@ -1315,6 +1359,7 @@ window.onload = function () {
 
     updateBoardOrientation();
     updateSideButtons();
+    updatePanelOrientation();
     updateSuggestionsButtons(draftShowSuggestions);
 
     drawBoard();
@@ -1329,6 +1374,7 @@ window.onload = function () {
         pendingPromotionMove=null;
         dragFrom=null;
         updateBoardOrientation();
+        updatePanelOrientation();
 
         bumpPositionCount();
         updateGameEndState();

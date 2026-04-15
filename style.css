@@ -304,6 +304,12 @@ body{
     margin-bottom:6px;
 }
 
+.cap-title span{
+  margin-left:6px;
+  font-weight:800;
+  color:#9fe870;
+}
+
 .captured-row{
     min-height:50px;
     display:flex;
