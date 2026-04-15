@@ -78,7 +78,26 @@
                             <button id="soundOffBtn" class="side-btn" type="button">Off</button>
                         </div>
 
-                        <p class="setting-hint">On plays game sounds. Off mutes all sounds.</p>
+                        <p class="setting-hint">On plays game sounds. Off mutes all sounds</p>
+                    </div>
+
+                    <div class="setting-group">
+                        <div class="settings-label">Timer</div>
+
+                        <div class="side-toggle" role="group" aria-label="Timer options">
+                           <button id="timerNoneBtn" class="side-btn active" type="button">No timer</button>
+                            <button id="timer5Btn" class="side-btn" type="button">5 min</button>
+                            <button id="timer10Btn" class="side-btn" type="button">10 min</button>
+                            <button id="timerCustomBtn" class="side-btn" type="button">Custom</button>
+                        </div>
+
+                        <div id="customTimerWrap" class="custom-timer-wrap hidden">
+                            <label for="customTimerInput">Minutes</label>
+                            <input id="customTimerInput" type="number" min="1" max="180" value="15">
+                        </div>
+
+                        <p class="setting-hint">Choose game time per player. Clock runs only on active turn.</p>
+
                     </div>
 
                     <div class="settings-actions">
@@ -118,7 +137,10 @@
             
                 <div id="capBoxBlack" class="capture-box">
                     <div class="cap-title">Captured by Black <span id="blackCapPoints">0</span></div>
-                    <div id="capturedByBlack" class="captured-row"></div>
+                    <div class="content-row">
+                        <div id="capturedByBlack" class="captured-row"></div>
+                        <div id="clockBlack" class="clock-box">05:00</div>
+                    </div>
                 </div>
             
                 <div class="buttons">
@@ -133,7 +155,10 @@
             
                 <div id="capBoxWhite" class="capture-box">
                     <div class="cap-title">Captured by White  <span id="whiteCapPoints">0</span></div>
-                    <div id="capturedByWhite" class="captured-row"></div>
+                    <div class="content-row">
+                        <div id="capturedByWhite" class="captured-row"></div>
+                        <div id="clockWhite" class="clock-box active">05:00</div>
+                    </div>
                 </div>
             
             </aside>

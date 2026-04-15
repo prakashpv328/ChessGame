@@ -296,18 +296,27 @@ body{
     border-radius:10px;
     padding:8px;
     margin-bottom:10px;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
 }
 
 .cap-title{
     font-size:12px;
     color:var(--muted);
-    margin-bottom:6px;
+    margin-bottom:0;
 }
 
 .cap-title span{
-  margin-left:6px;
-  font-weight:800;
-  color:#9fe870;
+    margin-left:6px;
+    font-weight:800;
+    color:#9fe870;
+}
+
+.content-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
 }
 
 .captured-row{
@@ -316,6 +325,8 @@ body{
     flex-wrap:wrap;
     gap:4px;
     align-items:center;
+    flex:1;
+    max-width:calc(100% - 70px);
 }
 
 .captured-piece{
@@ -356,7 +367,7 @@ button:active{
     border:1px solid #273141;
     border-radius:10px;
     padding:8px;
-    height:340px;
+    height:330px;
     overflow-y:auto;
     overflow-x:hidden;
     margin-bottom:10px;
@@ -569,6 +580,50 @@ button:active{
     min-width:110px;
     background:linear-gradient(180deg,#74e93d,#00ff08);
 }
+
+.side-toggle[aria-label="Timer options"]{
+    grid-template-columns: repeat(2, 1fr);
+}
+
+.custom-timer-wrap{
+    margin-top:10px;
+    display:grid;
+    gap:6px;
+}
+
+.custom-timer-wrap input{
+    padding:8px;
+    border-radius:8px;
+    border:1px solid #c9d6f3;
+}
+
+.clock-wrap{
+    display:none;
+    gap:8px;
+    margin:0 0 10px;
+}
+
+.clock-box{
+    background:#0f141c;
+    border:1px solid #273141;
+    border-radius:10px;
+    padding:8px 10px;
+    font-weight:700;
+    font-size:13px;
+    white-space:nowrap;
+    flex-shrink:0;
+    display:none;
+}
+
+.clock-box.visible{
+    display:block;
+}
+
+.clock-box.active{
+    border-color:#74e93d;
+    box-shadow:0 0 0 1px #74e93d inset;
+}
+
 
 .result-modal{
     position:fixed;

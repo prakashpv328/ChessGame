@@ -52,6 +52,16 @@ window.onload = function () {
     const winnerKingImgW=document.getElementById("winnerKingImgW");
     const winnerKingImgB=document.getElementById("winnerKingImgB");
 
+    const timerNoneBtn=document.getElementById("timerNoneBtn");
+    const timer5Btn=document.getElementById("timer5Btn");
+    const timer10Btn=document.getElementById("timer10Btn");
+    const timerCustomBtn=document.getElementById("timerCustomBtn");
+    const customTimerWrap=document.getElementById("customTimerWrap");
+    const customTimerInput=document.getElementById("customTimerInput");
+
+    const clockWhiteEl=document.getElementById("clockWhite");
+    const clockBlackEl=document.getElementById("clockBlack");
+
     const appEl=document.querySelector(".app");
 
 
@@ -198,6 +208,155 @@ window.onload = function () {
         })
     }
 
+    const TIMER_SETTINGS_KEY="chess-timer-settings";
+
+    let timerSetting={mode:"none",minutes:0};
+    let draftTimerSetting={mode:"none",minutes:0};
+
+    let whiteTimeMs=0;
+    let blackTimeMs=0;
+    let activeClockColor="w";
+    let timerInterval=null;
+    let lastTickTs=0;
+
+    function formatMs(ms){
+        const total=Math.max(0, Math.floor(ms/1000));
+        const m=Math.floor(total/60);
+        const s=total%60;
+        return `${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+    }
+
+    function isTimerEnabled(){
+        return timerSetting.mode!=="none" && timerSetting.minutes>0;
+    }
+
+    function getTimerMinutesFromSetting(setting){
+        if(setting.mode==="5") return 5;
+        if(setting.mode==="10") return 10;
+        if(setting.mode==="custom") return Math.max(1, Number(setting.minutes)||1);
+        return 0;
+    }
+
+    function updateTimerButtons(val=draftTimerSetting){
+        timerNoneBtn?.classList.toggle("active", val.mode==="none");
+        timer5Btn?.classList.toggle("active", val.mode==="5");
+        timer10Btn?.classList.toggle("active", val.mode==="10");
+        timerCustomBtn?.classList.toggle("active", val.mode==="custom");
+        customTimerWrap?.classList.toggle("hidden", val.mode!=="custom");
+    }
+
+    function saveTimerSetting(){
+        try{
+            localStorage.setItem(TIMER_SETTINGS_KEY, JSON.stringify(timerSetting));
+        }
+        catch(_){}
+    }
+
+    function loadSavedTimerSetting(){
+        try{
+            const raw=localStorage.getItem(TIMER_SETTINGS_KEY);
+            if(!raw) return;
+            const parsed=JSON.parse(raw);
+            if(!parsed || !parsed.mode) return;
+            timerSetting={
+                mode:["none","5","10","custom"].includes(parsed.mode)?parsed.mode:"none",
+                minutes:Math.max(1, Number(parsed.minutes)||0)
+            };
+        }
+        catch(_){}
+    } 
+
+    function renderClocks(){
+        if(!isTimerEnabled()){
+            clockWhiteEl?.classList.remove("visible");
+            clockBlackEl?.classList.remove("visible");
+            return;
+        }
+
+        clockWhiteEl?.classList.add("visible");
+        clockBlackEl?.classList.add("visible");
+        clockWhiteEl.textContent=formatMs(whiteTimeMs);
+        clockBlackEl.textContent=formatMs(blackTimeMs);
+
+        clockWhiteEl.classList.toggle("active", !game.gameOver && activeClockColor==="w");
+        clockBlackEl.classList.toggle("active", !game.gameOver && activeClockColor==="b");
+    }
+
+    function stopTimerLoop(){
+        if(timerInterval){
+            clearInterval(timerInterval);
+            timerInterval=null;
+        }
+    }
+
+    function startTimerLoop(){
+        stopTimerLoop();
+        if(!isTimerEnabled() || game.gameOver) return;
+
+        lastTickTs=Date.now();
+        timerInterval=setInterval(()=>{
+            if(game.gameOver){ stopTimerLoop(); return; }
+
+            const now=Date.now();
+            const delta=now-lastTickTs;
+            lastTickTs=now;
+
+            if(activeClockColor==="w") whiteTimeMs-=delta;
+            else blackTimeMs-=delta;
+
+            if(whiteTimeMs<=0){
+                whiteTimeMs=0;
+                game.gameOver=true;
+                game.gameResult="Time out! Black wins";
+                stopTimerLoop();
+                openGameEndPopup();
+            }else if(blackTimeMs<=0){
+                blackTimeMs=0;
+                game.gameOver=true;
+                game.gameResult="Time out! White wins";
+                stopTimerLoop();
+                openGameEndPopup();
+            }
+
+            renderClocks();
+        }, 200);
+    }
+
+    function initClocksForNewGame(){
+        const mins=getTimerMinutesFromSetting(timerSetting);
+        if(mins<=0){
+            whiteTimeMs=0;
+            blackTimeMs=0;
+            activeClockColor="w";
+            stopTimerLoop();
+            renderClocks();
+            return;
+        }
+        whiteTimeMs=mins*60*1000;
+        blackTimeMs=mins*60*1000;
+        activeClockColor="w"; // white starts
+        renderClocks();
+        startTimerLoop();
+    }
+
+    function syncClockAfterStateChange(){
+        if(!isTimerEnabled()){
+            renderClocks();
+            return;
+        }
+
+        activeClockColor=game.turn;
+        renderClocks();
+
+        if(game.gameOver){
+            stopTimerLoop();
+        }else if(!timerInterval){
+            startTimerLoop();
+        }else{
+            lastTickTs=Date.now();
+        }
+    }
+
 
 
 
@@ -337,6 +496,13 @@ window.onload = function () {
         updateSideButtons(draftPlayerSide);
         updateSuggestionsButtons(draftShowSuggestions);
         updateSoundButtons(draftShowSound);
+
+        draftTimerSetting={...timerSetting};
+        if(customTimerInput && draftTimerSetting.mode==="custom"){
+            customTimerInput.value=String(draftTimerSetting.minutes || 15);
+        }
+        updateTimerButtons(draftTimerSetting);
+
         settingsModal.classList.remove("hidden");
     }
     function closeSettings(){
@@ -344,6 +510,7 @@ window.onload = function () {
     }
 
     function openGameEndPopup(){
+        stopTimerLoop();
         resultText.textContent=game.gameResult || "Game Over";
         
         const isWhiteWin=game.gameResult.includes("Checkmate! White wins");
@@ -399,6 +566,7 @@ window.onload = function () {
         redoStack=[];
         pendingPromotionMove=null;
         dragFrom=null;
+        initClocksForNewGame();
         bumpPositionCount();
         updateGameEndState();
         playSound(SOUND.gameStart);
@@ -408,6 +576,7 @@ window.onload = function () {
     
     function backToLobby(){
         closeGameEndPopup();
+        stopTimerLoop();
         appEl.classList.add("hidden");
         setGameUiEnabled(false);
         lobbyEl.classList.remove("hidden");
@@ -899,6 +1068,13 @@ window.onload = function () {
         }
 
         game.turn=enemyOf(game.turn);
+
+        if(isTimerEnabled()){
+            activeClockColor=game.turn;
+            lastTickTs=Date.now();
+            renderClocks();
+        }
+
         game.selected=null;
         game.legalMoves=[];
 
@@ -1312,6 +1488,7 @@ window.onload = function () {
 
         const prev=undoStack.pop();
         restore(prev);
+        syncClockAfterStateChange();
         drawBoard();
     });
 
@@ -1322,6 +1499,7 @@ window.onload = function () {
 
         const next=redoStack.pop();
         restore(next);
+        syncClockAfterStateChange();
         drawBoard();
     })
 
@@ -1331,6 +1509,7 @@ window.onload = function () {
         redoStack=[];
         pendingPromotionMove=null;
         promotionModal.classList.add("hidden");
+        initClocksForNewGame();
         bumpPositionCount();
         updateGameEndState();
         playSound(SOUND.gameStart);
@@ -1367,7 +1546,7 @@ window.onload = function () {
 
     lobbySettingsBtn.addEventListener("click",openSettings);
     closeSettingsBtn.addEventListener("click",closeSettings);
-    
+
     saveSettingsBtn?.addEventListener("click",()=>{
         setPlayerSide(draftPlayerSide);
         showSuggestions=draftShowSuggestions;
@@ -1375,6 +1554,13 @@ window.onload = function () {
         savePlayerSide();
         saveSuggestions();
         saveSoundSetting();
+
+        timerSetting={...draftTimerSetting};
+        if(timerSetting.mode==="custom"){
+            timerSetting.minutes=Math.max(1, Number(customTimerInput?.value)||1);
+        }
+        saveTimerSetting();
+
         if(!showSound){
             stopAllSounds();
         }
@@ -1416,12 +1602,31 @@ window.onload = function () {
         downloadTextFile("game.pgn",pgn);
     });
 
+    timerNoneBtn?.addEventListener("click",()=>{ draftTimerSetting={mode:"none",minutes:0}; updateTimerButtons(); });
+    timer5Btn?.addEventListener("click",()=>{ draftTimerSetting={mode:"5",minutes:5}; updateTimerButtons(); });
+    timer10Btn?.addEventListener("click",()=>{ draftTimerSetting={mode:"10",minutes:10}; updateTimerButtons(); });
+    timerCustomBtn?.addEventListener("click",()=>{ 
+        const mins=Math.max(1, Number(customTimerInput?.value)||15);
+        draftTimerSetting={mode:"custom",minutes:mins};
+        updateTimerButtons();
+    });
+    customTimerInput?.addEventListener("input",()=>{
+        if(draftTimerSetting.mode==="custom"){
+            draftTimerSetting.minutes=Math.max(1, Number(customTimerInput.value)||1);
+        }
+    });
+
     appEl.classList.add("hidden");
     setGameUiEnabled(false);
 
     loadSavedPlayerSide();
     loadSavedSuggestions();
     loadSavedSoundSetting();
+
+    loadSavedTimerSetting();
+    draftTimerSetting={...timerSetting};
+    updateTimerButtons(draftTimerSetting);
+    renderClocks();
 
     draftPlayerSide=playerSide;
     draftShowSuggestions=showSuggestions;
@@ -1450,6 +1655,7 @@ window.onload = function () {
         dragFrom=null;
         updateBoardOrientation();
         updatePanelOrientation();
+        initClocksForNewGame();
 
         bumpPositionCount();
         updateGameEndState();
