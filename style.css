@@ -88,7 +88,7 @@ body{
     width:26%;
     height:26%;
     border-radius:50%;
-    background:rgba(40,40,40,.28);
+    background:rgba(40,40,40,0.28);
 }
 
 .square.drag-over{
@@ -101,11 +101,11 @@ body{
 }
 
 .square.last-move{
-    box-shadow: inset 0 0 0 9999px rgba(255,242,77,.45);
+    box-shadow: inset 0 0 0 9999px rgba(255,242,77,0.45);
 }
 
 .square.king-in-check{
-    box-shadow:inset 0 0 0 9999px rgba(255,40,40,.45);;
+    box-shadow:inset 0 0 0 9999px rgba(255,40,40,0.45);;
 }
 
 .piece{
@@ -152,15 +152,15 @@ body{
     border-radius:16px;
     overflow:hidden;
     border:1px solid #33425a;
-    box-shadow:0 20px 60px rgba(0,0,0,.55), inset 0 0 80px rgba(0,0,0,.35);
+    box-shadow:0 20px 60px rgba(0,0,0,0.55), inset 0 0 80px rgba(0,0,0,0.35);
     background:linear-gradient(135deg,#111a28,#0e141f 55%,#111a28);
 }
 
 .lobby-bg-grid{
     position:absolute; inset:0;
     background:
-      linear-gradient(45deg, rgba(238,238,210,.08) 25%, transparent 25%, transparent 75%, rgba(238,238,210,.08) 75%),
-      linear-gradient(45deg, rgba(118,150,86,.12) 25%, transparent 25%, transparent 75%, rgba(118,150,86,.12) 75%);
+      linear-gradient(45deg, rgba(238,238,210,0.08) 25%, transparent 25%, transparent 75%, rgba(238,238,210,0.08) 75%),
+      linear-gradient(45deg, rgba(118,150,86,0.12) 25%, transparent 25%, transparent 75%, rgba(118,150,86,0.12) 75%);
     background-size:calc(var(--sq)*2) calc(var(--sq)*2);
     background-position:0 0, var(--sq) var(--sq);
     opacity:.9;
@@ -183,7 +183,7 @@ body{
     letter-spacing:3px;
     font-size:clamp(26px,4.6vmin,48px);
     color:#f1f6ff;
-    text-shadow:0 6px 24px rgba(0,0,0,.5);
+    text-shadow:0 6px 24px rgba(0,0,0,0.5);
 }
 .lobby-content p{
     margin:8px 0 18px;
@@ -214,14 +214,14 @@ body{
     background:linear-gradient(180deg,#5c8dff,#3f6fe6);
     color:#fff;
     cursor:pointer;
-    box-shadow:0 8px 20px rgba(77,124,255,.45);
+    box-shadow:0 8px 20px rgba(77,124,255,0.45);
 }
 .start-btn:hover{transform:translateY(-1px);}
 
 .lobby-piece{
     position:absolute;
     z-index:2;
-    filter:drop-shadow(0 8px 18px rgba(0,0,0,.45));
+    filter:drop-shadow(0 8px 18px rgba(0,0,0,0.45));
     opacity:.95;
     pointer-events:none;
 }
@@ -333,7 +333,7 @@ button{
     font-weight:700;
     font-size:.86rem;
     cursor:pointer;
-    transition:.15s transform,.2s opacity,.2s background;
+    transition:.15s transform,0.2s opacity,0.2s background;
 }
 
 button:hover{
@@ -379,7 +379,7 @@ button:active{
     grid-template-columns:30px 1fr 1fr;
     gap:6px;
     padding:3px 0;
-    border-bottom:1px dashed rgba(255,255,255,.06);
+    border-bottom:1px dashed rgba(255,255,255,0.06);
     font-size:.92rem;
 }
 
@@ -397,7 +397,7 @@ button:active{
 .promotion-modal{
     position:fixed;
     inset:0;
-    background:rgba(0,0,0,.6);
+    background:rgba(0,0,0,0.6);
     display:flex;
     align-items:center;
     justify-content:center;
@@ -445,12 +445,12 @@ button:active{
     height:44px;
     border-radius:50%;
     border:1px solid #3a4d6b;
-    background:rgba(18,26,40,.9);
+    background:rgba(18,26,40,0.9);
     display:flex;
     align-items:center;
     justify-content:center;
     cursor:pointer;
-    box-shadow:0 8px 18px rgba(0,0,0,.35);
+    box-shadow:0 8px 18px rgba(0,0,0,0.35);
     padding:0;
 }
 .lobby-settings-btn img{
@@ -465,7 +465,7 @@ button:active{
 .settings-modal{
     position:fixed;
     inset:0;
-    background:rgba(0,0,0,.55);
+    background:rgba(0,0,0,0.55);
     display:flex;
     align-items:center;
     justify-content:center;
@@ -477,7 +477,7 @@ button:active{
     background:#fff;
     color:#111;
     border-radius:14px;
-    box-shadow:0 18px 40px rgba(0,0,0,.35);
+    box-shadow:0 18px 40px rgba(0,0,0,0.35);
     padding:12px;
 }
 .settings-head{
@@ -491,26 +491,75 @@ button:active{
 .settings-close-btn{
     border:none;
     border-radius:8px;
-    width:34px;
-    height:34px;
-    background:#e9eef8;
+    width:36px;
+    height:36px;
+    background:#ff0000;
     cursor:pointer;
     font-weight:700;
 }
 .settings-body{
-  margin-top:12px;
-  min-height:140px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  color:#6b7280;
-  font-weight:600;
+    margin-top:12px;
+    min-height:140px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:#6b7280;
+    font-weight:600;
+}
+
+.setting-group{
+    width:100%;
+}
+
+.setting-label{
+    font-size:13px;
+    font-weight:700;
+    color:#334155;
+    margin-bottom:10px;
+}
+
+.side-toggle{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+}
+
+.side-btn{
+    background:#edf2ff;
+    color:#24324a;
+    border:1px solid #c9d6f3;
+    box-shadow:none;
+}
+
+.side-btn.active{
+    background:linear-gradient(180deg,#5c8dff,#3f6fe6);
+    color:#fff;
+    border-color:#3f6fe6;
+}
+
+.setting-hint{
+    margin:10px 0 0;
+    font-size:12px;
+    line-height:1.4;
+    color:#6b7280;
+    font-weight:500;
+}
+
+.settings-actions{
+    margin-top:14px;
+    display:flex;
+    justify-content:flex-end;
+}
+
+.settings-save-btn{
+    min-width:110px;
+    background:linear-gradient(180deg,#74e93d,#00ff08);
 }
 
 .result-modal{
     position:fixed;
     inset:0;
-    background:rgba(0,0,0,.62);
+    background:rgba(0,0,0,0.62);
     display:flex;
     align-items:center;
     justify-content:center;

@@ -37,15 +37,28 @@
         </div>
 
         <div id="settingsModal" class="settings-modal hidden">
-          <div class="settings-box">
-            <div class="settings-head">
-              <h3>Settings</h3>
-              <button id="closeSettingsBtn" class="settings-close-btn" aria-label="Close">✕</button>
+            <div class="settings-box">
+
+                <div class="settings-head">
+                    <h3>Settings</h3>
+                    <button id="closeSettingsBtn" class="settings-close-btn" aria-label="Close">✕</button>
+                </div>
+              
+                <div class="settings-body">
+                    <div class="setting-group">
+                            <div class="setting-label">Play as</div>
+                            <div class="side-toggle" role="group" aria-label="Play as side">
+                                    <button id="whiteSideBtn" class="side-btn active" type="button">White</button>
+                                    <button id="blackSideBtn" class="side-btn" type="button">Black</button>
+                            </div>
+                            <p class="setting-hint">White keeps the normal board view. Black rotates the board.</p>
+                            <div class="settings-actions">
+                            <button id="saveSettingsBtn" class="settings-save-btn" type="button">Save</button>
+                            </div>
+                    </div>
+                </div>
+
             </div>
-            <div class="settings-body">
-                settings
-            </div>
-          </div>
         </div>
 
         <div id="gameEndModal" class="result-modal hidden">

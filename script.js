@@ -25,6 +25,10 @@ window.onload = function () {
     const lobbySettingsBtn=document.getElementById("lobbySettingsBtn");
     const settingsModal=document.getElementById("settingsModal");
     const closeSettingsBtn=document.getElementById("closeSettingsBtn");
+    const saveSettingsBtn=document.getElementById("saveSettingsBtn");
+
+    const whiteSideBtn=document.getElementById("whiteSideBtn");
+    const blackSideBtn=document.getElementById("blackSideBtn");
     
     const gameEndModal=document.getElementById("gameEndModal");
     const resultTitle=document.getElementById("resultTitle");
@@ -112,6 +116,55 @@ window.onload = function () {
     let dragFrom=null;
 
     let players={white:"Player1", black:"Player2"};
+    let playerSide="w";
+    let draftPlayerSide="w";
+    const PLAYER_SIDE_KEY="chess-player-side";
+
+    function loadSavedPlayerSide(){
+        try{
+            const saved=localStorage.getItem(PLAYER_SIDE_KEY);
+            if(saved==="w" || saved==="b"){
+                playerSide=saved;
+            }
+        }
+        catch(_){}
+    }
+
+    function savePlayerSide(){
+        try{
+            localStorage.setItem(PLAYER_SIDE_KEY,playerSide);
+        }
+        catch(_){}
+    }
+
+    function updateBoardOrientation(){
+        boardEl.classList.remove("rotated");
+    }
+
+    function updateSideButtons(side=playerSide){
+        if(!whiteSideBtn || !blackSideBtn) return;
+        whiteSideBtn.classList.toggle("active",side==="w");
+        blackSideBtn.classList.toggle("active",side==="b");
+    }
+
+    function setPlayerSide(side){
+        playerSide=side==="b" ? "b" : "w";
+        updateBoardOrientation();
+        updateSideButtons();
+        drawBoard();
+    }
+
+    function setDraftPlayerSide(side){
+        draftPlayerSide=side==="b" ? "b" : "w";
+        updateSideButtons(draftPlayerSide);
+    }
+
+    function getDisplayedSquare(displayRow,displayCol){
+        if(playerSide==="b"){
+            return {r:7-displayRow,c:7-displayCol};
+        }
+        return {r:displayRow,c:displayCol};
+    }
     
     function setGameUiEnabled(enabled){
       boardEl.style.pointerEvents = enabled ? "auto" : "none";
@@ -165,6 +218,8 @@ window.onload = function () {
     }
 
     function openSettings(){
+        draftPlayerSide=playerSide;
+        updateSideButtons(draftPlayerSide);
         settingsModal.classList.remove("hidden");
     }
     function closeSettings(){
@@ -1022,8 +1077,9 @@ window.onload = function () {
             checkedKing=findKing(game.board,game.turn);
         }
 
-        for(let r=0;r<8;r++){
-            for(let c=0;c<8;c++){
+        for(let displayRow=0;displayRow<8;displayRow++){
+            for(let displayCol=0;displayCol<8;displayCol++){
+                const {r,c}=getDisplayedSquare(displayRow,displayCol);
                 const sq = document.createElement("div");
                 sq.className = "square "+((r+c)%2===0?"light":"dark");
                 sq.dataset.r=r;
@@ -1153,6 +1209,14 @@ window.onload = function () {
 
     lobbySettingsBtn.addEventListener("click",openSettings);
     closeSettingsBtn.addEventListener("click",closeSettings);
+    saveSettingsBtn?.addEventListener("click",()=>{
+        setPlayerSide(draftPlayerSide);
+        savePlayerSide();
+        closeSettings();
+    });
+
+    whiteSideBtn?.addEventListener("click",()=>setDraftPlayerSide("w"));
+    blackSideBtn?.addEventListener("click",()=>setDraftPlayerSide("b"));
 
     settingsModal.addEventListener("click",(e)=>{
         if(e.target===settingsModal) closeSettings();
@@ -1163,6 +1227,10 @@ window.onload = function () {
 
     appEl.classList.add("hidden");
     setGameUiEnabled(false);
+    loadSavedPlayerSide();
+    draftPlayerSide=playerSide;
+    updateBoardOrientation();
+    updateSideButtons();
     drawBoard();
 
     startGameBtn.addEventListener("click",()=>{
@@ -1174,6 +1242,7 @@ window.onload = function () {
         redoStack=[];
         pendingPromotionMove=null;
         dragFrom=null;
+        updateBoardOrientation();
 
         bumpPositionCount();
         updateGameEndState();
