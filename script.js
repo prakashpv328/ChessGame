@@ -12,8 +12,6 @@ window.onload = function () {
     const promotionModal=document.getElementById("promotionModal");
     const promotionChoicesEl=document.getElementById("promotionChoices");
 
-    const exportPgnBtn=document.getElementById("exportPgnBtn");
-
     const claim50Btn=document.getElementById("claim50Btn");
     const claim3foldBtn=document.getElementById("claim3foldBtn");
 
@@ -36,9 +34,14 @@ window.onload = function () {
     const gameEndModal=document.getElementById("gameEndModal");
     const resultTitle=document.getElementById("resultTitle");
     const resultText=document.getElementById("resultText");
-    const winnerKingImg=document.getElementById("winnerKingImg");
+
     const restartFromPopupBtn=document.getElementById("restartFromPopupBtn");
     const backToLobbyBtn=document.getElementById("backToLobbyBtn");
+
+    const downloadMovesBtn=document.getElementById("downloadMovesBtn");
+    const winnerKingsWrap=document.getElementById("winnerKingsWrap");
+    const winnerKingImgW=document.getElementById("winnerKingImgW");
+    const winnerKingImgB=document.getElementById("winnerKingImgB");
 
     const appEl=document.querySelector(".app");
 
@@ -200,7 +203,7 @@ window.onload = function () {
     
     function setGameUiEnabled(enabled){
       boardEl.style.pointerEvents = enabled ? "auto" : "none";
-      [undoBtn,redoBtn,resetBtn,exportPgnBtn,claim50Btn,claim3foldBtn].forEach(btn=>btn.disabled=!enabled);
+      [undoBtn,redoBtn,resetBtn,claim50Btn,claim3foldBtn].forEach(btn=>btn.disabled=!enabled);
     }
 
     function snapshot(){
@@ -262,19 +265,45 @@ window.onload = function () {
 
     function openGameEndPopup(){
         resultText.textContent=game.gameResult || "Game Over";
-        winnerKingImg.classList.add("hidden");
-        winnerKingImg.removeAttribute("src");
-    
-        if(game.gameResult.includes("Checkmate! White wins")){
+        
+        const isWhiteWin=game.gameResult.includes("Checkmate! White wins");
+        const isBlackWin=game.gameResult.includes("Checkmate! Black wins");
+        const isDraw=!isWhiteWin && !isBlackWin;
+
+        winnerKingsWrap.innerHTML="";
+        winnerKingsWrap.classList.remove("hidden");
+
+        if(isWhiteWin){
             resultTitle.textContent="White Wins!";
-            winnerKingImg.src=IMG.wK;
-            winnerKingImg.classList.remove("hidden");
-        }else if(game.gameResult.includes("Checkmate! Black wins")){
+            const img=document.createElement("img");
+            img.className="winner-king";
+            img.src=IMG.wK;
+            img.alt="White King";
+            winnerKingsWrap.appendChild(img);
+        }
+        else if(isBlackWin){
             resultTitle.textContent="Black Wins!";
-            winnerKingImg.src=IMG.bK;
-            winnerKingImg.classList.remove("hidden");
-        }else{
+            const img=document.createElement("img");
+            img.className="winner-king";
+            img.src=IMG.bK;
+            img.alt="Black King";
+            winnerKingsWrap.appendChild(img);
+        }
+        else{
             resultTitle.textContent="Draw";
+            resultText.textContent="It's a draw!";
+            const w=document.createElement("img");
+            w.className="winner-king";
+            w.src=IMG.wK;
+            w.alt="White King";
+
+            const b=document.createElement("img");
+            b.className="winner-king";
+            b.src=IMG.bK;
+            b.alt="Black King";
+
+            winnerKingsWrap.appendChild(w);
+            winnerKingsWrap.appendChild(b);
         }
     
         gameEndModal.classList.remove("hidden");
@@ -583,6 +612,8 @@ window.onload = function () {
 
     function buildPgn(){
         const headers=[
+            `[White "${players.white}"]`,
+            `[Black "${players.black}"]`,
             '[Event "Casual Game"]',
             '[Site "Local"]',
             `[Date "${new Date().toISOString().split("T")[0]}"]`,
@@ -1209,11 +1240,6 @@ window.onload = function () {
         drawBoard();
     });
 
-    exportPgnBtn.addEventListener("click",()=>{
-        const pgn=buildPgn();
-        downloadTextFile("game.pgn",pgn);
-    });
-
     claim50Btn.addEventListener("click",()=>{
         if(game.gameOver) return;
         if(canClaim50MoveRule()){
@@ -1272,6 +1298,11 @@ window.onload = function () {
 
     restartFromPopupBtn.addEventListener("click",restartGameFromPopup);
     backToLobbyBtn.addEventListener("click",backToLobby);
+
+    downloadMovesBtn.addEventListener("click",()=>{
+        const pgn=buildPgn();
+        downloadTextFile("game.pgn",pgn);
+    });
 
     appEl.classList.add("hidden");
     setGameUiEnabled(false);

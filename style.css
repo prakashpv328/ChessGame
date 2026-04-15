@@ -581,15 +581,24 @@ button:active{
     text-align:center;
 }
 .winner-king{
+    width:100%;
+    display:flex;
+    justify-content:center;
+    align-items: center;
+    gap:12px;
+    margin:8px 0;
+}
+.winner-kings .winner-king{
     width:84px;
     height:84px;
-    object-fit:contain;
-    margin:6px auto;
-    display:block;
+    object-fit: contain;
+    display: inline-block;
+    margin:0 !important;
+    flex:0 0 auto;
 }
 .result-actions{
     display:grid;
-    grid-template-columns:1fr 1fr;
+    grid-template-columns:1fr;
     gap:8px;
     margin-top:10px;
 }
