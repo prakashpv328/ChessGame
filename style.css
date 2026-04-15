@@ -127,10 +127,32 @@ body{
 }
 
 #status{
-    margin:0 0 10px;
+    margin:0;
     font-size:1rem;
     font-weight:700;
     letter-spacing:.2px;
+    text-align:center;
+}
+
+.status-row{
+    position:relative;
+}
+
+.mobile-back-btn{
+    margin-top:2px;
+    display:none;
+    position:absolute;
+    left:10%;
+    top:50%;
+    transform:translateY(-50%);
+    width:34px;
+    height:24px;
+    border-radius:8px;
+    padding:0 0 6px 0;
+    font-size:1.1rem;
+    background:#ef4b2e;
+    color:#fff;
+    border:none;
 }
 
 .lobby-overlay{
@@ -295,7 +317,7 @@ body{
     border:1px solid #273141;
     border-radius:10px;
     padding:8px;
-    margin-bottom:10px;
+    /* margin-bottom:10px; */
     display:flex;
     flex-direction:column;
     gap:6px;
@@ -342,6 +364,10 @@ body{
     margin-bottom:10px;
 }
 
+.buttons.timer-mode-on{
+    grid-template-columns:repeat(3,minmax(0,1fr));
+}
+
 button{
     border:none;
     padding:9px 8px;
@@ -362,6 +388,16 @@ button:active{
     transform:translateY(1px);
 }
 
+.icon-mobile{
+    /* height: 20px; */
+    display:none;
+}
+
+.icon-desktop,
+.icon-mobile{
+    line-height:1;
+}
+
 .moves{
     background:#0f141c;
     border:1px solid #273141;
@@ -373,6 +409,10 @@ button:active{
     margin-bottom:10px;
     scrollbar-width:thin;
     scrollbar-color:#5f6876 transparent;
+}
+
+.mobile-moves-btn{
+    display:none;
 }
 
 .moves::-webkit-scrollbar{
@@ -488,15 +528,18 @@ button:active{
     align-items:center;
     justify-content:center;
     z-index:4300;
+    padding:12px;
 }
 .settings-box{
     width:min(420px,92vw);
-    min-height:220px;
+    max-height:min(86vh,680px);
     background:#fff;
     color:#111;
     border-radius:14px;
     box-shadow:0 18px 40px rgba(0,0,0,0.35);
-    padding:12px;
+    padding:10px;
+    display:flex;
+    flex-direction:column;
 }
 .settings-head{
     display:flex;
@@ -516,40 +559,42 @@ button:active{
     font-weight:700;
 }
 .settings-body{
-    margin-top:12px;
-    min-height:140px;
+    margin-top:10px;
     display:flex;
     flex-direction:column;
     align-items:stretch;
-    justify-content:center;
-    gap:14px;
+    gap:10px;
     color:#6b7280;
     font-weight:600;
+    overflow-y:auto;
+    padding-right:4px;
 }
 
 .setting-group{
     width:100%;
-    padding:10px;
+    padding:8px;
     border:1px solid #e6ebf5;
     border-radius:10px;
     background:#f8faff;
 
 }
 
-.setting-label{
+.setting-label,
+.settings-label{
     font-size:13px;
     font-weight:700;
     color:#334155;
-    margin-bottom:10px;
+    margin-bottom:6px;
 }
 
 .side-toggle{
     display:grid;
     grid-template-columns:1fr 1fr;
-    gap:8px;
+    gap:6px;
 }
 
 .side-btn{
+    padding:8px 10px;
     background:#edf2ff;
     color:#24324a;
     border:1px solid #c9d6f3;
@@ -563,17 +608,21 @@ button:active{
 }
 
 .setting-hint{
-    margin:10px 0 0;
-    font-size:12px;
-    line-height:1.4;
+    margin:6px 0 0;
+    font-size:11px;
+    line-height:1.3;
     color:#6b7280;
     font-weight:500;
 }
 
 .settings-actions{
-    margin-top:14px;
+    margin-top:8px;
     display:flex;
     justify-content:flex-end;
+    position:sticky;
+    bottom:0;
+    background:#fff;
+    padding-top:6px;
 }
 
 .settings-save-btn{
@@ -582,7 +631,18 @@ button:active{
 }
 
 .side-toggle[aria-label="Timer options"]{
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+@media (max-width:560px){
+    .settings-box{
+        width:min(430px,95vw);
+        max-height:90vh;
+    }
+
+    .side-toggle[aria-label="Timer options"]{
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 }
 
 .custom-timer-wrap{
@@ -595,12 +655,6 @@ button:active{
     padding:8px;
     border-radius:8px;
     border:1px solid #c9d6f3;
-}
-
-.clock-wrap{
-    display:none;
-    gap:8px;
-    margin:0 0 10px;
 }
 
 .clock-box{
@@ -675,12 +729,16 @@ button:active{
         width:290px;
     }
 
-    .buttons{
-        grid-template-columns:repeat(5,minmax(0,1fr));
-    }
 }
 
 @media(max-width:980px){
+    html,
+    body{
+        height:100dvh;
+        overflow:hidden;
+        overscroll-behavior:none;
+    }
+
     :root{
         --sq:min(12vmin,80px);
     }
@@ -688,29 +746,93 @@ button:active{
     .app{
         grid-template-columns:1fr;
         justify-items:center;
-        margin:10px auto;
+        margin:0px;
         padding:8px;
+        height:100dvh;
+        overflow:hidden;
     }
 
     .panel{
         width:min(560px,100%);
+        display:contents;
     }
 
     #status{
         text-align:center;
         font-size:1rem;
+        grid-column:2;
     }
 
-    .buttons{
-        grid-template-columns:repeat(5,minmax(0,1fr));
+    .status-row,
+    .capture-box,
+    .buttons,
+    .mobile-moves-btn{
+        width:calc(var(--sq) * 8 + var(--border) * 2);
+        max-width:100%;
+        justify-self:center;
+    }
+
+    .status-row{
+        display:grid;
+        grid-template-columns:34px 1fr 34px;
+        align-items:center;
+        /* gap:6px; */
+    }
+
+    .status-row::after{
+        content:"";
+        width:34px;
+        height:20px;
+        grid-column:3;
+    }
+
+    .mobile-back-btn{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        position:static;
+        transform:none;
+        grid-column:1;
+        background:#ef4b2e;
+        color:#fff;
+        border:none;
+    }
+
+    .mobile-moves-btn{
+        display:block;
     }
 
     .moves{
+        display:none;
         height:230px;
     }
 
+    .moves.mobile-open{
+        display:block;
+        position:fixed;
+        left:50%;
+        transform:translateX(-50%);
+        top:14vh;
+        width:min(92vw,420px);
+        height:min(60vh,420px);
+        z-index:4600;
+        margin:0;
+        overflow-y:auto;
+        overscroll-behavior:contain;
+        box-shadow:0 18px 40px rgba(0,0,0,0.45);
+        border:1px solid #3d4b63;
+    }
+
     .captured-row{
-        min-height:28px;
+        min-height:50px;
+    }
+
+    .icon-desktop{
+        display:none;
+    }
+
+    .icon-mobile{
+        display:inline;
     }
 }
 
@@ -769,12 +891,8 @@ button:active{
     .lp-wn{ width:50px; left:10px; bottom:76px; }
     .lp-br{ width:48px; left:104px; top:72px; }
 
-    .buttons{
-        grid-template-columns:repeat(5,minmax(0,1fr));
-    }
-
     button{
-        font-size:.82rem;
+        font-size:1rem;
         padding:8px 6px;
     }
 

@@ -1,5 +1,6 @@
 window.onload = function () {
     const boardEl = document.getElementById("board");
+    const statusRowEl=document.getElementById("statusRow");
     const statusEl= document.getElementById("status");
     const movesEl=document.getElementById("moves");
     const capturedByWhiteEl=document.getElementById("capturedByWhite");
@@ -34,6 +35,9 @@ window.onload = function () {
     const capBoxWhite=document.getElementById("capBoxWhite");
     const capBoxBlack=document.getElementById("capBoxBlack");
     const panelEl=document.querySelector(".panel");
+    const buttonsWrap=document.querySelector(".buttons");
+    const mobileMovesBtn=document.getElementById("mobileMovesBtn");
+    const mobileBackBtn=document.getElementById("mobileBackBtn");
 
     const suggestionsOnBtn=document.getElementById("suggestionsOnBtn");
     const suggestionsOffBtn=document.getElementById("suggestionsOffBtn");    
@@ -230,6 +234,10 @@ window.onload = function () {
         return timerSetting.mode!=="none" && timerSetting.minutes>0;
     }
 
+    function isTimerModeActive(){
+        return timerSetting.mode!=="none";
+    }
+
     function getTimerMinutesFromSetting(setting){
         if(setting.mode==="5") return 5;
         if(setting.mode==="10") return 10;
@@ -245,6 +253,15 @@ window.onload = function () {
         customTimerWrap?.classList.toggle("hidden", val.mode!=="custom");
     }
 
+    function updateUndoRedoForTimerMode(){
+        const timerModeOn=isTimerModeActive();
+        undoBtn.classList.toggle("hidden",timerModeOn);
+        redoBtn.classList.toggle("hidden",timerModeOn);
+        undoBtn.disabled=timerModeOn;
+        redoBtn.disabled=timerModeOn;
+        buttonsWrap?.classList.toggle("timer-mode-on",timerModeOn);
+    }
+
     function saveTimerSetting(){
         try{
             localStorage.setItem(TIMER_SETTINGS_KEY, JSON.stringify(timerSetting));
@@ -258,8 +275,10 @@ window.onload = function () {
             if(!raw) return;
             const parsed=JSON.parse(raw);
             if(!parsed || !parsed.mode) return;
+
+            const normalizedMode=parsed.mode==="3" ? "5" : parsed.mode;
             timerSetting={
-                mode:["none","5","10","custom"].includes(parsed.mode)?parsed.mode:"none",
+                mode:["none","5","10","custom"].includes(normalizedMode)?normalizedMode:"none",
                 minutes:Math.max(1, Number(parsed.minutes)||0)
             };
         }
@@ -429,6 +448,9 @@ window.onload = function () {
     function setGameUiEnabled(enabled){
       boardEl.style.pointerEvents = enabled ? "auto" : "none";
       [undoBtn,redoBtn,resetBtn,claim50Btn,claim3foldBtn].forEach(btn=>btn.disabled=!enabled);
+      if(enabled){
+        updateUndoRedoForTimerMode();
+      }
     }
 
     function updatePanelOrientation(){
@@ -441,6 +463,43 @@ window.onload = function () {
             panelEl.insertBefore(capBoxBlack, panelEl.querySelector(".buttons"));
             panelEl.appendChild(capBoxWhite);
         }
+
+        updateMobilePanelLayout();
+    }
+
+    function isMobileLayout(){
+        return window.matchMedia("(max-width:980px)").matches;
+    }
+
+    function closeMobileMovesPopup(){
+        movesEl.classList.remove("mobile-open");
+        mobileMovesBtn?.classList.remove("active");
+        if(mobileMovesBtn) mobileMovesBtn.textContent="Moves"
+    }
+
+    function updateMobilePanelLayout(){
+        if(!appEl || !boardEl || !statusRowEl || !buttonsWrap || !mobileMovesBtn) return;
+
+        if(!isMobileLayout()){
+            statusRowEl.style.order="";
+            boardEl.style.order="";
+            capBoxWhite.style.order="";
+            capBoxBlack.style.order="";
+            mobileMovesBtn.style.order="";
+            buttonsWrap.style.order="";
+            closeMobileMovesPopup();
+            return;
+        }
+
+        const topCapture=playerSide==="w" ? capBoxBlack : capBoxWhite;
+        const bottomCapture=playerSide==="w" ? capBoxWhite : capBoxBlack;
+
+        statusRowEl.style.order="10";
+        topCapture.style.order="20";
+        boardEl.style.order="30";
+        bottomCapture.style.order="40";
+        mobileMovesBtn.style.order="50";
+        buttonsWrap.style.order="60";
     }
 
     function snapshot(){
@@ -1482,6 +1541,7 @@ window.onload = function () {
     }
 
     undoBtn.addEventListener("click",()=>{
+        if(isTimerModeActive()) return;
         if(undoStack.length===0) return;
 
         redoStack.push(snapshot());
@@ -1493,6 +1553,7 @@ window.onload = function () {
     });
 
     redoBtn.addEventListener("click",()=>{
+        if(isTimerModeActive()) return;
         if(redoStack.length===0) return;
 
         undoStack.push(snapshot());
@@ -1560,6 +1621,7 @@ window.onload = function () {
             timerSetting.minutes=Math.max(1, Number(customTimerInput?.value)||1);
         }
         saveTimerSetting();
+        updateUndoRedoForTimerMode();
 
         if(!showSound){
             stopAllSounds();
@@ -1594,6 +1656,35 @@ window.onload = function () {
         if(e.target===settingsModal) closeSettings();
     });
 
+    mobileMovesBtn?.addEventListener("click",()=>{
+        if(!isMobileLayout()) return;
+        const willOpen=!movesEl.classList.contains("mobile-open");
+        movesEl.classList.toggle("mobile-open",willOpen);
+        mobileMovesBtn.classList.toggle("active",willOpen);
+        mobileMovesBtn.textContent=willOpen?"Close Moves":"Moves";
+    })
+
+
+
+    
+    document.addEventListener("click",(e)=>{
+        if(!isMobileLayout()) return;
+        if(!movesEl.classList.contains("mobile-open")) return;
+
+        const target=e.target;
+        const clickedPopup=movesEl.contains(target);
+        const clickedBtn=mobileMovesBtn?.contains(target);
+        if(!clickedPopup && !clickedBtn){
+            closeMobileMovesPopup();
+        }
+    });
+
+    mobileBackBtn?.addEventListener("click",()=>{
+        backToLobby();
+    });
+
+    window.addEventListener("resize",updateMobilePanelLayout);
+    
     restartFromPopupBtn.addEventListener("click",restartGameFromPopup);
     backToLobbyBtn.addEventListener("click",backToLobby);
 
@@ -1627,6 +1718,7 @@ window.onload = function () {
     draftTimerSetting={...timerSetting};
     updateTimerButtons(draftTimerSetting);
     renderClocks();
+    updateUndoRedoForTimerMode();
 
     draftPlayerSide=playerSide;
     draftShowSuggestions=showSuggestions;
@@ -1635,6 +1727,7 @@ window.onload = function () {
     updateBoardOrientation();
     updateSideButtons();
     updatePanelOrientation();
+    updateMobilePanelLayout();
     updateSuggestionsButtons(draftShowSuggestions);
     updateSoundButtons(draftShowSound);
 

@@ -133,7 +133,10 @@
             <div id="board" class="board"></div>
         
             <aside class="panel">
-                <h3 id="status">Chess Game</h3>
+                <div id="statusRow" class="status-row">
+                    <button id="mobileBackBtn" class="mobile-back-btn" type="button" aria-label="Back to lobby">⇦</button>
+                    <h3 id="status">Chess Game</h3>
+                </div>
             
                 <div id="capBoxBlack" class="capture-box">
                     <div class="cap-title">Captured by Black <span id="blackCapPoints">0</span></div>
@@ -144,14 +147,16 @@
                 </div>
             
                 <div class="buttons">
-                    <button id="undoBtn">⮌</button>
-                    <button id="redoBtn">⮎</button>
-                    <button id="resetBtn">⭮</button>
+                    <button id="undoBtn"><span class="icon-desktop">⮌</span><span class="icon-mobile">↶</span></button>
+                    <button id="redoBtn"><span class="icon-desktop">⮎</span><span class="icon-mobile">↷</span></button>
+                    <button id="resetBtn"><span class="icon-desktop">⭮</span><span class="icon-mobile">↻</span></button>
                     <button id="claim50Btn">50M</button>
                     <button id="claim3foldBtn">3x</button>
                 </div>
             
                 <div id="moves" class="moves"></div>
+
+                <button id="mobileMovesBtn" class="mobile-moves-btn" type="button">Moves</button>
             
                 <div id="capBoxWhite" class="capture-box">
                     <div class="cap-title">Captured by White  <span id="whiteCapPoints">0</span></div>
