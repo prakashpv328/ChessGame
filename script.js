@@ -1544,6 +1544,12 @@ window.onload = function () {
         const piece=game.board[r][c];
 
         if(!piece || piece.color!==game.turn){
+            if(game.selected){
+                e.preventDefault();
+                touchDragFrom={r:game.selected.r,c:game.selected.c};
+                touchDragActive=true;
+                return;
+            }
             playSound(SOUND.illegal);
             return;
         }
@@ -1583,6 +1589,7 @@ window.onload = function () {
 
         const t=e.changedTouches[0];
         if(!t || !touchDragFrom){
+            removeTouchDragGhost();
             touchDragActive=false;
             touchDragFrom=null;
             game.selected=null;
@@ -1592,6 +1599,14 @@ window.onload = function () {
         }
 
         const target=getSquareFromTouch(t);
+
+        if(target && target.r===touchDragFrom.r && target.c===touchDragFrom.c){
+            removeTouchDragGhost();
+            touchDragActive=false;
+            touchDragFrom=null;
+            drawBoard();
+            return;
+        }
 
         if(target){
             const chosen=game.legalMoves.find(m=>m.to.r===target.r && m.to.c===target.c);
@@ -1619,7 +1634,7 @@ window.onload = function () {
         drawBoard();
     }
 
-    function onSquaretouchCancel(e){
+    function onSquareTouchCancel(e){
         e.preventDefault();
         clearTouchHighlights();
         removeTouchDragGhost();
@@ -1720,7 +1735,7 @@ window.onload = function () {
                 sq.addEventListener("touchstart",onSquareTouchStart,{passive:false});
                 sq.addEventListener("touchmove",onSquareTouchMove,{passive:false});
                 sq.addEventListener("touchend",onSquareTouchEnd,{passive:false});   
-                sq.addEventListener("touchcancel",onSquaretouchCancel,{passive:false});
+                sq.addEventListener("touchcancel",onSquareTouchCancel,{passive:false});
 
                 boardEl.appendChild(sq);
             }
