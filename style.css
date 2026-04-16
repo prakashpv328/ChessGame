@@ -846,6 +846,17 @@ button:active{
 }
 
 @media (max-width:980px){
+    
+    body.moves-popup-open::before{
+        content:"";
+        position:fixed;
+        inset:0;
+        z-index:4550;
+        background:rgba(6,10,18,0.35);
+        backdrop-filter:blur(6px);
+        -webkit-backdrop-filter:blur(6px);   
+    }
+
     html,
     body{
         height:100dvh;
@@ -943,6 +954,17 @@ button:active{
         border:1px solid #3d4b63;
     }
 
+
+    .mobile-moves-btn.active{
+        position:fixed;
+        left:50%;
+        transform: translateX(-50%);
+        top:calc(14vh + min(60vh,420px) + 10px);
+        width:min(92vw,420px);
+        z-index:4700;
+        background: #ef4b2e;
+        box-shadow:0 12px 24px rgba(0,0,0,0.38);
+    }
     .captured-row{
         min-height:50px;
     }

@@ -519,6 +519,7 @@ window.onload = function () {
     function closeMobileMovesPopup(){
         movesEl.classList.remove("mobile-open");
         mobileMovesBtn?.classList.remove("active");
+        document.body.classList.remove("moves-popup-open");
         if(mobileMovesBtn) mobileMovesBtn.textContent="Moves"
     }
 
@@ -1864,6 +1865,7 @@ window.onload = function () {
         const willOpen=!movesEl.classList.contains("mobile-open");
         movesEl.classList.toggle("mobile-open",willOpen);
         mobileMovesBtn.classList.toggle("active",willOpen);
+        document.body.classList.toggle("moves-popup-open",willOpen)
         mobileMovesBtn.textContent=willOpen?"Close Moves":"Moves";
     })
 
