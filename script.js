@@ -152,6 +152,9 @@ window.onload = function () {
     let pendingPromotionMove=null;
     let dragFrom=null;
 
+    let touchDragFrom=null;
+    let touchDragActive=false;
+
     let players={white:"Player1", black:"Player2"};
     let playerSide="w";
     let draftPlayerSide="w";
@@ -354,7 +357,7 @@ window.onload = function () {
         }
         whiteTimeMs=mins*60*1000;
         blackTimeMs=mins*60*1000;
-        activeClockColor="w"; // white starts
+        activeClockColor="w";
         renderClocks();
         startTimerLoop();
     }
@@ -1510,6 +1513,104 @@ window.onload = function () {
         });
     }
 
+    function isTouchDevice(){
+        return window.matchMedia("(pointer:coarse)").matches;
+    }
+
+    function getSquareFromTouch(touch){
+        const el=document.elementFromPoint(touch.clientX,touch.clientY);
+        if(!el) return null;
+        const sq=el.closest(".square");
+        if(!sq) return null;
+
+        return{
+            el:sq,
+            r:Number(sq.dataset.r),
+            c:Number(sq.dataset.c)
+        };
+    }
+
+    function clearTouchHighlights(){
+        boardEl.querySelectorAll(".square.drag-over").forEach(sq=>sq.classList.remove("drag-over"));
+    }
+
+    function onSquareTouchStart(e){
+        if(!isTouchDevice() || game.gameOver) return;
+
+        const sqEl=e.currentTarget;
+        const r=Number(sqEl.dataset.r);
+        const c=Number(sqEl.dataset.c);
+        const piece=game.board[r][c];
+
+        if(!piece || piece.color!==game.turn){
+            playSound(SOUND.illegal);
+            return;
+        }
+
+        e.preventDefault();
+        touchDragFrom={r,c};
+        touchDragActive=true;
+
+        game.selected={r,c};
+        game.legalMoves=getLegalMoves(r,c);
+        drawBoard();
+    }
+
+    function onSquareTouchMove(e){
+        if(!touchDragActive) return;
+        e.preventDefault();
+
+        clearTouchHighlights();
+
+        const t=e.touches[0];
+        if(!t) return;
+        const target=getSquareFromTouch(t);
+        if(target?.el) target.el.classList.add("drag-over");
+    }
+
+    function onSquareTouchEnd(e){
+        if(!touchDragActive) return;
+        e.preventDefault();
+
+        clearTouchHighlights();
+
+        const t=e.changedTouches[0];
+        if(!t || !touchDragFrom){
+            touchDragActive=false;
+            touchDragFrom=null;
+            game.selected=null;
+            game.legalMoves=[];
+            drawBoard();
+            return;
+        }
+
+        const target=getSquareFromTouch(t);
+
+        if(target){
+            const chosen=game.legalMoves.find(m=>m.to.r===target.r && m.to.c===target.c);
+
+            if(chosen){
+                if(isPromotionMove(chosen)){
+                    pendingPromotionMove=clone(chosen);
+                    const pawn=game.board[chosen.from.r][chosen.from.c];
+                    openPromotionModal(pawn.color);
+                }
+                else{
+                    finalizeMove(chosen);
+                }
+            }
+            else{
+                playSound(SOUND.illegal);
+            }
+        }
+
+        touchDragActive=false;
+        touchDragFrom=null;
+        game.selected=null;
+        game.legalMoves=[];
+        drawBoard();
+    }
+
     function drawBoard(){
         boardEl.innerHTML="";
 
@@ -1572,6 +1673,10 @@ window.onload = function () {
                 sq.addEventListener("dragover",onSquareDragOver);
                 sq.addEventListener("dragleave",onSquareDragLeave);
                 sq.addEventListener("drop",onSquareDrop);
+
+                sq.addEventListener("touchstart",onSquareTouchStart,{passive:false});
+                sq.addEventListener("touchmove",onSquareTouchMove,{passive:false});
+                sq.addEventListener("touchend",onSquareTouchEnd,{passive:false});   
 
                 boardEl.appendChild(sq);
             }

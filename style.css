@@ -158,6 +158,11 @@ body{
     box-shadow:0 8px 24px rgba(0,0,0,0.28);
 }
 
+.square,
+.piece{
+    touch-action: none;
+}
+
 #status{
     margin:0 10px;
     font-size:1rem;
