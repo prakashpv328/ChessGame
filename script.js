@@ -67,6 +67,7 @@ window.onload = function () {
     const clockBlackEl=document.getElementById("clockBlack");
 
     const appEl=document.querySelector(".app");
+    let orientationGuardEl=null;
 
 
     const IMG = {
@@ -446,11 +447,11 @@ window.onload = function () {
     }
     
     function setGameUiEnabled(enabled){
-      boardEl.style.pointerEvents = enabled ? "auto" : "none";
-      [undoBtn,redoBtn,resetBtn,claim50Btn,claim3foldBtn].forEach(btn=>btn.disabled=!enabled);
-      if(enabled){
-        updateUndoRedoForTimerMode();
-      }
+        boardEl.style.pointerEvents = enabled ? "auto" : "none";
+        [undoBtn,redoBtn,resetBtn,claim50Btn,claim3foldBtn].forEach(btn=>btn.disabled=!enabled);
+        if(enabled){
+            updateUndoRedoForTimerMode();
+        }
     }
 
     function updatePanelOrientation(){
@@ -468,7 +469,47 @@ window.onload = function () {
     }
 
     function isMobileLayout(){
-        return window.matchMedia("(max-width:980px)").matches;
+        const smallWidth = window.matchMedia("(max-width:700px)").matches;
+        const touchTablet = window.matchMedia("(max-width:980px) and (pointer:coarse)").matches;
+        return smallWidth || touchTablet;
+    }
+
+    function tryLockPortraitOnMobile(){
+        const isTouchMobile = window.matchMedia("(max-width:980px) and (pointer:coarse)").matches;
+        if(!isTouchMobile) return;
+
+        const orientationApi = screen?.orientation;
+        if(!orientationApi || typeof orientationApi.lock !== "function") return;
+
+        orientationApi.lock("portrait").catch(()=>{});
+    }
+
+    function isMobileLandscape(){
+        return window.matchMedia("(max-width:980px) and (pointer:coarse) and (orientation:landscape)").matches;
+    }
+
+    function ensureOrientationGuard(){
+        if(orientationGuardEl) return;
+
+        orientationGuardEl=document.createElement("div");
+        orientationGuardEl.id="orientationGuard";
+        orientationGuardEl.className="hidden";
+        orientationGuardEl.innerHTML=`
+            <div class="orientation-guard-card">
+                <h3>Rotate Device</h3>
+                <p>Please use portrait mode to continue the game.</p>
+            </div>
+        `;
+        document.body.appendChild(orientationGuardEl);
+    }
+
+    function updateOrientationGuard(){
+        ensureOrientationGuard();
+        const landscapeBlocked=isMobileLandscape();
+        orientationGuardEl.classList.toggle("hidden",!landscapeBlocked);
+        if(landscapeBlocked){
+            closeMobileMovesPopup();
+        }
     }
 
     function closeMobileMovesPopup(){
@@ -569,11 +610,12 @@ window.onload = function () {
     }
 
     function openGameEndPopup(){
+        playSound(SOUND.gameEnd);
         stopTimerLoop();
         resultText.textContent=game.gameResult || "Game Over";
         
-        const isWhiteWin=game.gameResult.includes("Checkmate! White wins");
-        const isBlackWin=game.gameResult.includes("Checkmate! Black wins");
+        const isWhiteWin=game.gameResult.includes("Checkmate! White wins") || game.gameResult.includes("Time out! White wins");
+        const isBlackWin=game.gameResult.includes("Checkmate! Black wins") || game.gameResult.includes("Time out! Black wins");
         const isDraw=!isWhiteWin && !isBlackWin;
 
         winnerKingsWrap.innerHTML="";
@@ -1151,7 +1193,6 @@ window.onload = function () {
         updateGameEndState();
 
         if(game.gameOver){
-            playSound(SOUND.gameEnd);
             openGameEndPopup();
         }
         else if(move.promotion){
@@ -1582,8 +1623,7 @@ window.onload = function () {
         if(canClaim50MoveRule()){
             game.gameOver=true;
             game.gameResult="Draw claimed by 50-move rule";
-            playSound(SOUND.gameEnd);
-        openGameEndPopup();
+            openGameEndPopup();
             drawBoard();
         }
         else{
@@ -1596,8 +1636,7 @@ window.onload = function () {
         if(canClaimThreefold()){
             game.gameOver=true;
             game.gameResult="Draw claimed by threefold repetition";
-            playSound(SOUND.gameEnd);
-        openGameEndPopup();
+            openGameEndPopup();
             drawBoard();
         }
         else{
@@ -1683,7 +1722,16 @@ window.onload = function () {
         backToLobby();
     });
 
-    window.addEventListener("resize",updateMobilePanelLayout);
+    window.addEventListener("resize",()=>{
+        tryLockPortraitOnMobile();
+        updateMobilePanelLayout();
+        updateOrientationGuard();
+    });
+    window.addEventListener("orientationchange",()=>{
+        tryLockPortraitOnMobile();
+        updateMobilePanelLayout();
+        updateOrientationGuard();
+    });
     
     restartFromPopupBtn.addEventListener("click",restartGameFromPopup);
     backToLobbyBtn.addEventListener("click",backToLobby);
@@ -1728,6 +1776,8 @@ window.onload = function () {
     updateSideButtons();
     updatePanelOrientation();
     updateMobilePanelLayout();
+    tryLockPortraitOnMobile();
+    updateOrientationGuard();
     updateSuggestionsButtons(draftShowSuggestions);
     updateSoundButtons(draftShowSound);
 
@@ -1738,6 +1788,9 @@ window.onload = function () {
     drawBoard();
 
     startGameBtn.addEventListener("click",()=>{
+        tryLockPortraitOnMobile();
+        updateOrientationGuard();
+
         players.white=(whiteNameEl?.value || "Player1").trim() || "Player1";
         players.black=(blackNameEl?.value || "Player2").trim() || "Player2";
 
