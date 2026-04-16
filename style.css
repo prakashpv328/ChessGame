@@ -163,6 +163,18 @@ body{
     touch-action: none;
 }
 
+.touch-drag-ghost{
+    position:fixed;
+    width:calc(var(--sq) - 10px);
+    height:calc(var(--sq) - 10px);
+    object-fit:contain;
+    pointer-events:none;
+    transform:translate(-50%,-50%);
+    z-index:4700;
+    opacity:0.95;
+    filter:drop-shadow(0 6px 14px rgba(0,0,0,0.45));
+}
+
 #status{
     margin:0 10px;
     font-size:1rem;

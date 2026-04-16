@@ -154,6 +154,7 @@ window.onload = function () {
 
     let touchDragFrom=null;
     let touchDragActive=false;
+    let touchDragGhostEl=null;
 
     let players={white:"Player1", black:"Player2"};
     let playerSide="w";
@@ -1551,6 +1552,9 @@ window.onload = function () {
         touchDragFrom={r,c};
         touchDragActive=true;
 
+        const t=e.touches[0];
+        if(t) createTouchDragGhost(piece,t);
+
         game.selected={r,c};
         game.legalMoves=getLegalMoves(r,c);
         drawBoard();
@@ -1564,6 +1568,9 @@ window.onload = function () {
 
         const t=e.touches[0];
         if(!t) return;
+
+        moveTouchDragGhost(t);
+
         const target=getSquareFromTouch(t);
         if(target?.el) target.el.classList.add("drag-over");
     }
@@ -1604,11 +1611,47 @@ window.onload = function () {
             }
         }
 
+        removeTouchDragGhost();
         touchDragActive=false;
         touchDragFrom=null;
         game.selected=null;
         game.legalMoves=[];
         drawBoard();
+    }
+
+    function onSquaretouchCancel(e){
+        e.preventDefault();
+        clearTouchHighlights();
+        removeTouchDragGhost();
+        touchDragActive=false;
+        touchDragFrom=null;
+        game.selected=null;
+        game.legalMoves=[];
+        drawBoard();
+    }
+
+    function createTouchDragGhost(piece,touch){
+        removeTouchDragGhost();
+
+        touchDragGhostEl=document.createElement("img");
+        touchDragGhostEl.className="touch-drag-ghost";
+        touchDragGhostEl.src=IMG[piece.color+piece.type];
+        touchDragGhostEl.alt=piece.color+piece.type;
+        document.body.appendChild(touchDragGhostEl);
+
+        moveTouchDragGhost(touch);
+    }
+
+    function moveTouchDragGhost(touch){
+        if(!touchDragActive || !touch) return;
+        touchDragGhostEl.style.left=`${touch.clientX}px`;
+        touchDragGhostEl.style.top=`${touch.clientY}px`;
+    }
+
+    function removeTouchDragGhost(){
+        if(!touchDragGhostEl) return;
+        touchDragGhostEl.remove();
+        touchDragGhostEl=null;
     }
 
     function drawBoard(){
@@ -1677,6 +1720,7 @@ window.onload = function () {
                 sq.addEventListener("touchstart",onSquareTouchStart,{passive:false});
                 sq.addEventListener("touchmove",onSquareTouchMove,{passive:false});
                 sq.addEventListener("touchend",onSquareTouchEnd,{passive:false});   
+                sq.addEventListener("touchcancel",onSquaretouchCancel,{passive:false});
 
                 boardEl.appendChild(sq);
             }
